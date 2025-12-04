@@ -3,6 +3,7 @@ import astropy.units as u
 import astropy.constants as const
 import matplotlib.pyplot as plt
 from astrodust_optprops.optics_core import calculate_spectral_flux_density_bb
+from warnings import warn
 
 class Star:
     """
@@ -232,7 +233,9 @@ class Star:
         return ax
 
     @u.quantity_input(distance=u.m)
-    def get_spectral_flux_density(self, wavs, to_jy=False, distance=0*u.au):
+    def get_spectral_flux_density(self, wavs, 
+                                  to_jy: bool = False,
+                                  distance: u.Quantity = 0 * u.au):
         """Get spectral flux density at specified wavelengths.
         
         This method provides a unified interface for getting stellar spectral flux density
@@ -262,25 +265,36 @@ class Star:
             log_flux[np.isinf(log_flux)] = -50.0  # Handle extrapolation beyond data range
             surface_flux = 10.0**log_flux
         
-        
         if to_jy:
             # Convert from wavelength to frequency units (Jy)
             F_lambda = surface_flux * u.W / u.m**2 / u.um   # W/m²/μm
             F_nu_W_m2_Hz = (F_lambda * (wavs*u.um)**2) / const.c
             surface_flux = F_nu_W_m2_Hz.to(u.Jy)
-        
-        if distance == 0 * distance.unit:
+
+        if distance.size == 1 and distance == 0 * distance.unit:
+            # Return surface flux
             flux = surface_flux
         else:
+            # Return flux received at given distance
             # Calculate stellar radius from luminosity and temperature
             # L = 4π R² σ T⁴  =>  R = sqrt(L / (4π σ T⁴))
             luminosity = self.lum_suns * const.L_sun
             temperature = self.temp * u.K
             stellar_radius = ((luminosity / (4 * np.pi * const.sigma_sb * temperature**4))**0.5)
+
+            # Warn if distance is < 3 * R_star
+            close_mask = distance < 3 * stellar_radius
+            if np.any(close_mask):
+                warn(
+                    "Some distances are within 3 stellar radii of the surface. "
+                    "The simple inverse-square flux scaling may be inaccurate here.",
+                    UserWarning,
+                )
+            
             # Apply inverse square law: flux_observed = surface_flux * (R_star / distance)²
             flux = surface_flux * (stellar_radius / distance).to(1)**2        
             
         # Return scalar if input was scalar
-        if np.isscalar(wavs) or len(wavs) == 1:
-            return flux.item() if hasattr(flux, 'item') else flux
+        if (np.isscalar(wavs) or len(wavs) == 1) and distance.size == 1:
+            return flux[0] if hasattr(flux, "__getitem__") else flux
         return flux

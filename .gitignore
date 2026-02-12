@@ -168,6 +168,8 @@ cython_debug/
 /examples/*/*.json
 /examples/*/*.pkl
 /examples/*/*.png
+/examples/*/*.h5
+/examples/*/*.csv
 /src/astrodust_optprops/legacy.py
 /src/astrodust_optprops/core_legacy.py
 /src/astrodust_optprops/classes_legacy.py

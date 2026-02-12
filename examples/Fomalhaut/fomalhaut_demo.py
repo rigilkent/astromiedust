@@ -10,11 +10,11 @@ star = opt.Star(name='Fomalhaut', lum_suns=16.6, mass_suns=1.92,
     spectrum_file=script_dir / 'fomalhaut_spectrum.txt')
 
 # Create material object example volume fractions of silicate, ice, and voids
-matrl = opt.Material(qsil=1, qice=1.0, mpor=.7, emt='maxwell-garnett')
+matrl = opt.Material(qsil=.4, qice=1.0, mpor=.7, emt='maxwell-garnett')
 
 wavs = np.logspace(0, 4, 300)
-diams = np.logspace(.5, 3.5, 25)
-dists = np.logspace(1, 3, 20)
+diams = np.logspace(0, 4, 41)
+dists = np.logspace(0, 3, 43)
 
 # --------------------------- Calculate optical properties -----------------------
 # Create Particles instance and calculate all properties
@@ -23,8 +23,11 @@ prtl = opt.Particles(diams=diams, wavs=wavs, dists=dists,
 prtl.calculate_all(star)
 
 # --------------------------- Save complete state --------------------------------
-# model = opt.OpticalModel(star=star, prtl=prtl)
-# model.save(script_dir / 'fomalhaut_results.pkl')
+model = opt.OpticalModel(star=star, prtl=prtl)
+model.save(script_dir / 'fomalhaut_results.pkl')
+# model.save_beta_csv(script_dir / 'fomalhaut_beta.csv')
+# model.save_qabs_bnu_hdf5(script_dir / 'fomalhaut_therm_emission.h5')
+
 
 
 # ----------------------------- Later, load and use: -------------------------------

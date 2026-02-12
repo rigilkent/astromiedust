@@ -452,7 +452,13 @@ class Particles:
         if not np.isclose(beta_up, beta_blow, rtol=0.03):
             warnings.warn(f"""Error or inaccuracy in calculating upper size limit.
                 Requested beta: {beta_blow}. Actual beta at the upper size limit: {beta_up}.""", RuntimeWarning)
-            
+        
+        if diam_up < self.diams.min():
+            warnings.warn(f"Upper blowout diameter ({diam_up:.3f} µm) likely inaccurate: "
+                          f"It is smaller than the minimum diameter for which optical properties "
+                          f"are computed ({self.diams.min():.3f} µm). Adjust the diameter range "
+                          f"to ensure accurate blowout size calculation.", UserWarning)
+
         # Find lower diameter limit
         if k.min() > 0:
             test_diams_near = test_diams[k.min()-1:k.min()+1]
@@ -507,7 +513,17 @@ class Particles:
         Returns:
             numpy.ndarray: Spectral radiance in specified domain units
         """
-        return core.calculate_spectral_radiance_bb(wavs, temps, domain=domain)
+        B_lambda = core.calculate_spectral_radiance_bb(wavs, temps)
+        B_lambda = B_lambda * u.W / (u.m**2 * u.sr * u.um)
+        
+        if domain.startswith('wav'):
+            return B_lambda.value  # W/m^2/sr/µm
+        elif domain.startswith('freq'):
+            wavs = wavs * u.um
+            B_nu = B_lambda * (wavs**2 / const.c)
+            return B_nu.to(u.Jy / u.sr).value  # Jy/sr
+        else:
+            raise ValueError("Invalid domain specified. Use 'freq' or 'wav'.")
 
     def interpolate_temperatures(self, target_distances):
         """Interpolates temperatures for particles based on radial distances.
@@ -610,7 +626,8 @@ class Particles:
                                 Run calculate_beta_factors() first.""")
 
         ax.plot(self.diams, self.betas, marker=marker, linestyle='-', zorder=1)
-        ax.axhline(y=1, color='grey', linestyle='--', linewidth=0.8, zorder=0)
+        ax.axhline(y=0.5, color='grey', linestyle='--', linewidth=0.8, zorder=0)
+        ax.text(100, 0.47, r'$\beta=0.5$  ', ha='right', va='top',color='grey', fontsize=10)
 
         ax.set_xscale('log')
         if ylog:
@@ -635,6 +652,8 @@ class Particles:
                 if as_contour=True. Defaults to 100.
             add_contour_lines (list, optional): Values at which to add contour lines in 2D
                 plot. Only used if as_contour=True. Set to None to disable. Defaults to [100, 200, 300].
+            add_blowout (bool, optional): If True, adds blowout diameter lines to the plot.
+                Defaults to True.
 
         Returns:
             matplotlib.axes.Axes: The axes containing the plot.

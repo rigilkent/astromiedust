@@ -1,7 +1,8 @@
 import numpy as np
 from numba import jit
-import warnings
 
+k1 = 1.1910439e8        # = 2hc^2 in (W/m²)µm^4
+k2 = 14387.69           # = hc/k in µm*K
 
 def get_logwav_integration_grid(temperature, n_step=400):
     """
@@ -109,13 +110,13 @@ def calculate_spectral_flux_density_bb(wavs, temp):
     """
     return calculate_spectral_radiance_bb(wavs, temp) * np.pi
 
-def calc_spectral_flux_density_bb(wavs, temp):
-    """
-    Wrapper needed for old optmod files. (Runs v40s)
-    """
-    return calculate_spectral_flux_density_bb(wavs, temp)
+# def calc_spectral_flux_density_bb(wavs, temp):
+#     """
+#     Wrapper needed for old optmod files. (Runs v40s)
+#     """
+#     return calculate_spectral_flux_density_bb(wavs, temp)
 
-def calculate_spectral_radiance_bb(wavs, temp, domain='wavelength'):
+def calculate_spectral_radiance_bb(wavs, temp):
     """
     Calculate the spectral radiance (Bλ or B_nu) in W/m^2/µm/sr of a black body 
     for a given temperature and one or more wavelengths using Planck's law.
@@ -128,29 +129,19 @@ def calculate_spectral_radiance_bb(wavs, temp, domain='wavelength'):
     Args:
         wavs (float or np.ndarray): Wavelength(s) in µm or frequency in Hz.
         temp (float or np.ndarray): Temperature(s) in K. Can have any shape.
-        domain (str, optional): Domain of output ('wavelength' or 'frequency'). Defaults to 'wavelength'.
     
     Returns:
-        float or np.ndarray: Spectral radiance in W/m²/µm/sr or Jy/sr.
+        float or np.ndarray: Spectral radiance in W/m²/µm/sr.
     """
     temp = np.asarray(temp)[..., None]  # Add wavelength dimension to any shape input
-    
-    if domain[0:3] == 'wav':
-        # Calculate spectral radiance in W/m²/µm/sr
-        k1 = 1.1910439e8        # = 2hc^2 in (W/m²)µm^4
-        fact1 = k1 / wavs**5
-    elif domain[0:4] == 'freq':
-        # Calculate spectral radiance in Jy/sr
-        k1 = 3.9728949e+19      # = 2hc in Jy*µm^3
-        fact1 = k1 / wavs**3
-    else:
-        raise ValueError("Invalid domain. Choose 'wavelength' or 'frequency'.")
-    
-    k2 = 14387.69               # = hc/k in µm*K
+ 
+    fact1 = k1 / wavs**5
     fact2 = k2 / (wavs * temp)
-    fact2 = np.clip(fact2, a_min=None, a_max=88) # Clip to avoid overflow in exp(fact2)
-
-    return fact1 / (np.exp(fact2) - 1)
+    
+    # Clip fact2 to avoid overflow in exp(fact2) for large fact2 (small T or lambda).
+    # Double precision max is ~709. Using 700 to be safe.
+    # We use expm1 for better precision at small fact2.
+    return fact1 / np.expm1(np.clip(fact2, None, 700))
 
 def calculate_blackbody_temp(star, dist):
     """

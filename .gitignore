@@ -170,6 +170,7 @@ cython_debug/
 /examples/*/*.png
 /examples/*/*.h5
 /examples/*/*.csv
+/examples/*/belt_spectrum_demo.py
 /src/astrodust_optprops/legacy.py
 /src/astrodust_optprops/core_legacy.py
 /src/astrodust_optprops/classes_legacy.py

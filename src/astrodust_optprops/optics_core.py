@@ -93,6 +93,16 @@ def integrate_log_spectrum(flux, logwavs):
     wavs = 10.0**logwavs
     return np.trapezoid(flux * wavs * np.log(10.0), x=logwavs)
 
+def calculate_asymmetry_factor(qabs, qsca, qpr):
+    """
+    Calculate the asymmetry factor g from efficiency coefficients.
+    g = (Qext - Qpr) / Qsca = (Qabs + Qsca - Qpr) / Qsca
+    """
+    # Use np.errstate to handle divide by zero (where Qsca is 0, g is physically 0)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        g = (qabs + qsca - qpr) / qsca
+    return np.nan_to_num(g, nan=0.0, posinf=0.0, neginf=0.0)
+
 def calculate_spectral_flux_density_bb(wavs, temp):
     """
     Calculate the spectral flux density, Fλ=π*Bλ, of a black body at a given temperature.
@@ -196,6 +206,7 @@ def calculate_scatt_efficiency_coeffs(wavs, diam, matrl):
     qabs = np.ones_like(wavs)
     qpr = np.ones_like(wavs)
     qsca = np.ones_like(wavs)
+    g = np.zeros_like(wavs)
     x = np.pi * diam * matrl.refmed / wavs
     m = np.sqrt(dielec)
     mx = np.abs(m) * x 
@@ -210,23 +221,24 @@ def calculate_scatt_efficiency_coeffs(wavs, diam, matrl):
     if np.any(mie_region):
         k = np.where(mie_region)[0]
         for i in k:
-            qabs[i], qpr[i], qsca[i] = calculate_coeffs_mie_theory(x[i], m[i])
+            qabs[i], qpr[i], qsca[i], g[i] = calculate_coeffs_mie_theory(x[i], m[i])
     
     # Apply Rayleigh-Gans theory, where wavelengths are small compared to size and m~1
     if np.any(rayleigh_gans_region):
         k = np.where(rayleigh_gans_region)[0]
-        qabs[k], qpr[k], qsca[k] = calculate_coeffs_rayleigh_gans(x[k], m[k])
+        qabs[k], qpr[k], qsca[k], g[k] = calculate_coeffs_rayleigh_gans(x[k], m[k])
     
     # Apply Geometric Optics, where wavelengths are small compared to size and not m~1
     if np.any(geometric_region):
         k = np.where(geometric_region)[0]
-        qabs[k], qpr[k], qsca[k] = calculate_coeffs_geom_optics(np.real(m[k]))
+        qabs[k], qpr[k], qsca[k], g[k] = calculate_coeffs_geom_optics(np.real(m[k]))
 
     # Store all coefficients in a dictionary
     return {
         'abs': qabs,
         'pr': qpr,
-        'sca': qsca
+        'sca': qsca,
+        'g': g
     }
 
 @jit(nopython=True)
@@ -240,7 +252,7 @@ def calculate_coeffs_mie_theory(x, m, n_ang=1):
         m (complex): Relative refractive index of the material, defined as sqrt(epsilon).
         n_ang (int, optional): Number of angles at which to calculate the scattering intensities. Defaults to 1.
     Returns:
-        tuple: The requested optical coefficients (Qabs, Qpr, Qsca).
+        tuple: The requested optical coefficients (Qabs, Qpr, Qsca, g).
     """
     
     # Number of terms needed in expansion for Mie coeffs (see BH p477)
@@ -299,7 +311,7 @@ def calculate_coeffs_mie_theory(x, m, n_ang=1):
     
     # Set some other initial values
     qsca = 0.0
-    asymf = 0.0
+    g = 0.0
     p = -1.0
 
     an1 = np.complex128(0 + 0j)
@@ -318,11 +330,11 @@ def calculate_coeffs_mie_theory(x, m, n_ang=1):
         
         # Augment the sums for Qsca and ASMYF = g = GSCA = <cos(theta)> (see VH p. 128):
         qsca += (2 * n + 1) * (abs(an)**2 + abs(bn)**2)
-        asymf += fn1[i] * (an * np.conj(bn)).real
+        g += fn1[i] * (an * np.conj(bn)).real
 
         # Calculate "pi" and "tau" from previous two using relations (BH)
         if n > 1:
-            asymf += fn2[i] * ((an * np.conj(an1)).real + (bn * np.conj(bn1)).real)
+            g += fn2[i] * ((an * np.conj(an1)).real + (bn * np.conj(bn1)).real)
         
         if n > 1:
             pi =  (nsdouble[i] * amu * pi1 - n * pi0) / (n - 1)
@@ -347,14 +359,14 @@ def calculate_coeffs_mie_theory(x, m, n_ang=1):
 
     # Calculate the optical coefficients (see VH page 128)
     x2 = x * x
-    asymf = 2 * asymf / qsca                # Asymmetry factor
+    g = 2 * g / qsca                # Asymmetry factor
     qsca = 2 * qsca / x2
     qext = 4 * s1[0].real / x2              # Extinction efficiency
     qabs = qext - qsca
-    qpr = qext - qsca * asymf
+    qpr = qext - qsca * g
     # qback = abs(s1[-1])**2 / (x2 * np.pi)   # Backscattering efficiency
 
-    return qabs, qpr, qsca
+    return qabs, qpr, qsca, g
 
 def calculate_coeffs_rayleigh_gans(x, m):
     """Calculate coefficients (Qabs, Qpr, Qsca) using Rayleigh-Gans theory (BH158 and LD93).
@@ -363,14 +375,15 @@ def calculate_coeffs_rayleigh_gans(x, m):
         x (float): Size parameter of the particle.
         m (complex): Complex refractive index of the particle.
     Returns:
-        tuple: The requested optical coefficients (Qabs, Qpr, Qsca).
+        tuple: The requested optical coefficients (Qabs, Qpr, Qsca, g).
     """
 
     x2 = x * x
     qabs = 8.0 * np.imag(m) * x / 3.0
     qsca = 32.0 * np.abs(m - 1)**2 * x2 * x2 / (27.0 + 16.0 * x2)
-    qpr = qabs + qsca / (1 + 0.3 * x2)
-    return qabs, qpr, qsca
+    g = 1.0 - 1.0 / (1.0 + 0.3 * x2)
+    qpr = qabs + qsca * (1.0 - g)
+    return qabs, qpr, qsca, g
 
 def calculate_coeffs_geom_optics(refreal, n_step=1000):
     """Calculate coefficients (Qabs, Qpr, Qsca) using geometric optics.
@@ -380,7 +393,7 @@ def calculate_coeffs_geom_optics(refreal, n_step=1000):
         n_step (int, optional): Number of integration steps. Defaults to 1000.
 
     Returns:
-        tuple: The requested optical coefficients (Qabs, Qpr, Qsca).
+        tuple: The requested optical coefficients (Qabs, Qpr, Qsca, g).
     """
 
     x = np.linspace(0, 1, n_step)
@@ -418,5 +431,6 @@ def calculate_coeffs_geom_optics(refreal, n_step=1000):
     # see "extinction paradox" in Bohren & Huffman, 1983.
     qext = 2
     qsca = qext - qabs
+    g = (qext - qpr) / qsca
 
-    return qabs, qpr, qsca
+    return qabs, qpr, qsca, g

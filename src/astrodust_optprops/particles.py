@@ -50,6 +50,7 @@ class Particles:
         self.Qabs = None
         self.Qpr = None
         self.Qsca = None
+        self.g = None
         self.betas = None
         self.bnus = None
         self.diams_blow = None
@@ -75,6 +76,7 @@ class Particles:
         Qabs = np.zeros((len(diameters), len(self.precomputed_wavs)))
         Qpr = np.zeros_like(Qabs)
         Qsca = np.zeros_like(Qabs)
+        Qg = np.zeros_like(Qabs)
         
         for i, diam in enumerate(tqdm(
             diameters,
@@ -87,8 +89,9 @@ class Particles:
             Qabs[i] = Qs['abs']
             Qpr[i] = Qs['pr']
             Qsca[i] = Qs['sca']
+            Qg[i] = Qs['g']
         
-        return Qabs, Qpr, Qsca
+        return Qabs, Qpr, Qsca, Qg
 
     def _precompute_coefficients(self):
         """Initialize lookup tables for scattering coefficients.
@@ -100,6 +103,7 @@ class Particles:
         self.precomputed_Qabs = {}
         self.precomputed_Qpr = {}
         self.precomputed_Qsca = {}
+        self.precomputed_g = {}
         
         if self.suppress_mie_resonance:
             # Create a fine logarithmic grid of diameters
@@ -111,7 +115,7 @@ class Particles:
             fine_diams = np.logspace(np.log10(min_diam), np.log10(max_diam), n_fine)
             
             # Compute coefficients on fine grid
-            fine_Qabs, fine_Qpr, fine_Qsca = self._compute_coefficients_for_diameters(fine_diams)
+            fine_Qabs, fine_Qpr, fine_Qsca, fine_g = self._compute_coefficients_for_diameters(fine_diams)
             
             # For each requested diameter, average over nearby grid points
             for diam in self.diams:
@@ -127,28 +131,31 @@ class Particles:
                 self.precomputed_Qabs[diam] = 10**np.mean(np.log10(fine_Qabs[mask]), axis=0)
                 self.precomputed_Qpr[diam] = 10**np.mean(np.log10(fine_Qpr[mask]), axis=0)
                 self.precomputed_Qsca[diam] = 10**np.mean(np.log10(fine_Qsca[mask]), axis=0)
+                # Average g factor in linear space
+                self.precomputed_g[diam] = np.mean(fine_g[mask], axis=0)
 
         else:
             # If not suppressing, just compute at requested diameters
-            Qabs, Qpr, Qsca = self._compute_coefficients_for_diameters(self.diams)
+            Qabs, Qpr, Qsca, Qg = self._compute_coefficients_for_diameters(self.diams)
             for i, diam in enumerate(self.diams):
                 self.precomputed_Qabs[diam] = Qabs[i]
                 self.precomputed_Qpr[diam] = Qpr[i]
                 self.precomputed_Qsca[diam] = Qsca[i]
+                self.precomputed_g[diam] = Qg[i]
 
     def get_Q_interpolator(self, diam, Q_type='abs'):
         """Returns a function that interpolates Q coefficients at given wavelengths.
         
         Args:
             diam (float): Particle diameter
-            Q_type (str): Type of coefficient ('abs', 'pr', or 'sca')
+            Q_type (str): Type of coefficient ('abs', 'pr', 'sca', or 'g')
         
         Returns:
             callable: Function that takes wavelength array and returns interpolated Q values
         
         Note:
-            Uses logarithmic interpolation to handle large variations in Q values
-            while ensuring they remain positive.
+            Uses logarithmic interpolation for efficiencies to handle large variations,
+            while using linear interpolation for the asymmetry factor g.
         """
         if not self.precompute_Qs:
             return None
@@ -156,7 +163,8 @@ class Particles:
         Q_dict = {
             'abs': self.precomputed_Qabs,
             'pr': self.precomputed_Qpr,
-            'sca': self.precomputed_Qsca
+            'sca': self.precomputed_Qsca,
+            'g': self.precomputed_g
         }
         
         Q_type = Q_type.lower()
@@ -182,22 +190,34 @@ class Particles:
             log_d2 = np.log10(d2)
             w = (log_d - log_d1) / (log_d2 - log_d1)
             
-            # Get Q values and handle zeros/negatives before taking log
-            Q1 = np.maximum(Q_dict[Q_type][d1], 1e-30)
-            Q2 = np.maximum(Q_dict[Q_type][d2], 1e-30)
-            
-            # Interpolate in log space
-            log_Q = (1 - w) * np.log10(Q1) + w * np.log10(Q2)
-            Q_values = 10.0**log_Q
+            if Q_type == 'g':
+                # Linear interpolation for g factor
+                Q_values = (1 - w) * Q_dict['g'][d1] + w * Q_dict['g'][d2]
+            else:
+                # Get Q values and handle zeros/negatives before taking log
+                Q1 = np.maximum(Q_dict[Q_type][d1], 1e-30)
+                Q2 = np.maximum(Q_dict[Q_type][d2], 1e-30)
+                
+                # Interpolate in log space
+                log_Q = (1 - w) * np.log10(Q1) + w * np.log10(Q2)
+                Q_values = 10.0**log_Q
 
         def interpolator(wavs):
-            # Log interpolation in wavelength dimension
-            return 10.0**np.interp(
-                np.log10(wavs),
-                np.log10(self.precomputed_wavs),
-                np.log10(np.maximum(Q_values, 1e-30)),
-                left=-30, right=-30  # Will become 1e-30 after 10**
-            )
+            if Q_type == 'g':
+                # Linear interpolation in wavelength dimension for g factor
+                return np.interp(
+                    np.log10(wavs),
+                    np.log10(self.precomputed_wavs),
+                    Q_values
+                )
+            else:
+                # Log interpolation in wavelength dimension for efficiencies
+                return 10.0**np.interp(
+                    np.log10(wavs),
+                    np.log10(self.precomputed_wavs),
+                    np.log10(np.maximum(Q_values, 1e-30)),
+                    left=-30, right=-30  # Will become 1e-30 after 10**
+                )
             
         return interpolator
 
@@ -327,10 +347,11 @@ class Particles:
         raise RuntimeError(f"Temperature calculation did not converge for diameter={diam}, distance={dist}")
 
     def calculate_scattering_properties(self):
-        """Calculate Qabs, Qpr, and Qsca for the particles"""
+        """Calculate Qabs, Qpr, Qsca, and g for the particles"""
         self.Qabs = np.zeros((len(self.diams), len(self.wavs)))
         self.Qpr = np.zeros_like(self.Qabs)
         self.Qsca = np.zeros_like(self.Qabs)
+        self.g = np.zeros_like(self.Qabs)
 
         for i, diam in enumerate(self.diams):
             if self.precompute_Qs:
@@ -338,14 +359,16 @@ class Particles:
                 self.Qabs[i] = self.get_Q_interpolator(diam, 'abs')(self.wavs)
                 self.Qpr[i] = self.get_Q_interpolator(diam, 'pr')(self.wavs)
                 self.Qsca[i] = self.get_Q_interpolator(diam, 'sca')(self.wavs)
+                self.g[i] = self.get_Q_interpolator(diam, 'g')(self.wavs)
             else:
-                # Calculate directly
+                # Calculate directly (already includes g from regime functions)
                 Qs = core.calculate_scatt_efficiency_coeffs(self.wavs, diam, matrl=self.matrl)
                 self.Qabs[i] = Qs['abs']
                 self.Qpr[i] = Qs['pr']
                 self.Qsca[i] = Qs['sca']
+                self.g[i] = Qs['g']
         
-        return self.Qabs, self.Qpr, self.Qsca
+        return self.Qabs, self.Qpr, self.Qsca, self.g
 
     def calculate_beta_factors(self, star, diams=None, n_step=400):
         """Calculate beta factors (ratio of radiation to gravitational force)
@@ -758,6 +781,64 @@ class Particles:
             ax.legend(title="Particle diameters:", loc='lower left', framealpha=1)
             ax.set_ylabel(rf'$Q_\mathrm{{{Q_type}}}$', fontsize=12)
             ax.set_ylim(1e-2, max(np.ceil(Q_data.max()), 2))
+            ax.set_xlim(self.wavs.min(), self.wavs.max())
+
+        ax.set_xlabel('Wavelength (µm)')
+
+        return ax
+
+    def plot_g(self, ax=None, diams=None, as_contour=False, n_contour_levels=100, add_contour_lines=[0.5, 0.8]):
+        """Plot the asymmetry factor (g) as a function of wavelength.
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): Axes to plot on. If None, creates new figure.
+            diams (array-like, optional): Diameters to plot in line plot mode. If None and
+                as_contour=False, uses [3, 10, 30, 100, 300, 1000] µm. Ignored if as_contour=True.
+            as_contour (bool, optional): If True, creates contour plot. If False, creates line
+                plots. Defaults to False.
+            n_contour_levels (int, optional): Number of contour levels in 2D plot. Only used
+                if as_contour=True. Defaults to 100.
+            add_contour_lines (list, optional): Values at which to add contour lines in 2D
+                plot. Only used if as_contour=True. Set to None to disable. Defaults to [0.5, 0.8].
+
+        Returns:
+            matplotlib.axes.Axes: The axes containing the plot.
+        """
+        if self.g is None:
+            raise ValueError("Asymmetry factor g has not been calculated. Run calculate_scattering_properties() first.")
+
+        if ax is None:
+            _, ax = plt.subplots()
+
+        if as_contour:
+            if diams is not None:
+                warnings.warn("plot_g(): Input 'diams' is ignored when as_contour=True", UserWarning)
+            contour = ax.contourf(self.wavs, self.diams, self.g,
+                                  levels=np.linspace(0, 1, n_contour_levels),
+                                  cmap='YlGnBu_r')
+
+            cbar = plt.colorbar(contour, ax=ax, label=r'Asymmetry factor $g$', pad=.01)
+            cbar.ax.set_ylabel(cbar.ax.get_ylabel(), fontsize=11)
+            cbar.set_ticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+            if add_contour_lines is not None:
+                contour_lines = ax.contour(self.wavs, self.diams, self.g, levels=add_contour_lines,
+                                           colors='k', linewidths=.3, linestyles='dashed')
+                cbar.add_lines(contour_lines)
+            ax.set_ylabel(r'Particle diameter (µm)')
+            ax.set_yscale('log')
+            ax.set_xscale('log')
+        else:
+            if diams is None:
+                diams = np.logspace(.5, 3, 6)
+            diams = diams[np.logical_and(diams >= self.diams.min(), diams <= self.diams.max())]
+            # Create color progression using a colormap
+            colors = plt.cm.winter(np.linspace(0, 1, len(diams)))
+            for diam, color in zip(diams, colors):
+                idx = np.argmin(np.abs(self.diams - diam))
+                ax.semilogx(self.wavs, self.g[idx, :], label=f'{self.diams[idx]:.0f} µm', color=color, zorder=self.n_diams - idx)
+            ax.legend(title="Particle diameters:", loc='lower left', framealpha=1)
+            ax.set_ylabel(r'Asymmetry factor $g$', fontsize=12)
+            ax.set_ylim(-0.05, 1.05)
             ax.set_xlim(self.wavs.min(), self.wavs.max())
 
         ax.set_xlabel('Wavelength (µm)')

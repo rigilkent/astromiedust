@@ -80,7 +80,7 @@ class Particles:
         
         for i, diam in enumerate(tqdm(
             diameters,
-            desc="Precomputing Q coefficients",
+            desc="Calculating Q coefficients",
             disable=not self.show_progress,
             smoothing=.7,
             bar_format='{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'

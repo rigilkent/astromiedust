@@ -16,7 +16,8 @@ dependencies = [
     "numba",
     "astropy",
     "matplotlib",
-    "tqdm"
+    "tqdm",
+    "h5py"
 ]
 
 [tool.setuptools.packages.find]

@@ -60,17 +60,16 @@ class Particles:
         self.suppress_mie_resonance = suppress_mie_resonance
         self.size_averaging_window = size_averaging_window
         self.precompute_Qs = precompute_Qs
+        self.precomputed_wavs = None
+        self.precomputed_Qabs = {}
+        self.precomputed_Qpr = {}
+        self.precomputed_Qsca = {}
+        self.precomputed_g = {}
 
         if self.suppress_mie_resonance and not self.precompute_Qs:
             warnings.warn("Mie resonance suppression requires precomputed Q coefficients. "
                           "Setting precompute_Qs=True.", UserWarning)
             self.precompute_Qs = True
-
-        # Optional: precomputation of coefficients (faster for if num(dists) high; needed for resoannce suppression)
-        if self.precompute_Qs:
-            # Create broad wavelength grid for precomputation
-            self.precomputed_wavs = self._create_precomputed_wavelength_grid(self.wavs)
-            self._precompute_coefficients()
 
     def _create_precomputed_wavelength_grid(self, wavs):
         """Create the wavelength grid used for precomputed Q coefficients."""
@@ -98,13 +97,44 @@ class Particles:
 
         wav_min = np.min(wavs)
         wav_max = np.max(wavs)
-        if wav_min < self.precomputed_wavs[0] or wav_max > self.precomputed_wavs[-1]:
+        if self.precomputed_wavs is None:
+            self.precomputed_wavs = self._create_precomputed_wavelength_grid(wavs)
+            self._precompute_coefficients()
+            return
+
+        coverage_rtol = 1e-12
+        needs_shorter_wavs = wav_min < self.precomputed_wavs[0] * (1.0 - coverage_rtol)
+        needs_longer_wavs = wav_max > self.precomputed_wavs[-1] * (1.0 + coverage_rtol)
+
+        if needs_shorter_wavs or needs_longer_wavs:
+            expansion_factor = 1.02
             grid_bounds = np.array([
-                min(wav_min, self.precomputed_wavs[0]),
-                max(wav_max, self.precomputed_wavs[-1]),
+                min(wav_min / expansion_factor, self.precomputed_wavs[0]),
+                max(wav_max * expansion_factor, self.precomputed_wavs[-1]),
             ])
             self.precomputed_wavs = self._create_precomputed_wavelength_grid(grid_bounds)
             self._precompute_coefficients()
+
+    def _ensure_temperature_precomputed_wavelength_coverage(self, star, temps_bb=None):
+        """Precompute a Q grid covering stellar, dust-emission, and output wavelengths."""
+        if not self.precompute_Qs:
+            return
+
+        if temps_bb is None:
+            if self.dists is None:
+                raise ValueError("Distances (dists) must be set to prepare temperature calculations")
+            temps_bb = np.array([core.calculate_blackbody_temp(star=star, dist=dist)
+                                 for dist in self.dists])
+
+        star_logwavs = core.get_logwav_integration_grid(star.temp)
+        dust_temp_planning_margin = 0.7
+        coldest_planned_temp = max(np.min(temps_bb) * dust_temp_planning_margin, 1.0)
+        coldest_logwavs = core.get_logwav_integration_grid(coldest_planned_temp)
+        self._ensure_precomputed_wavelength_coverage(np.concatenate([
+            self.wavs,
+            10.0**star_logwavs,
+            10.0**coldest_logwavs,
+        ]))
 
     def _compute_coefficients_for_diameters(self, diameters):
         """Helper method to compute raw Q coefficients for a set of diameters."""
@@ -194,6 +224,9 @@ class Particles:
         """
         if not self.precompute_Qs:
             return None
+
+        if self.precomputed_wavs is None:
+            self._ensure_precomputed_wavelength_coverage(self.wavs)
             
         Q_dict = {
             'abs': self.precomputed_Qabs,
@@ -290,11 +323,11 @@ class Particles:
         star_logwavs = core.get_logwav_integration_grid(star.temp)    
         star_flux = core.calculate_spectral_flux_density(star_logwavs, star=star)
         total_star_flux = core.integrate_log_spectrum(star_flux, star_logwavs)
-        self._ensure_precomputed_wavelength_coverage(10.0**star_logwavs)
         
         # Calculate blackbody temperatures at each distance as initial guesses
         temps_bb = np.array([core.calculate_blackbody_temp(star=star, dist=dist) 
                            for dist in self.dists])
+        self._ensure_temperature_precomputed_wavelength_coverage(star, temps_bb=temps_bb)
 
         # Calculate absorption efficiency averaged over stellar spectrum
         stellar_qabs = np.zeros(n_diams)
@@ -478,7 +511,10 @@ class Particles:
         diams_to_use = np.asarray(np.atleast_1d(diams) if diams is not None else self.diams, dtype=float)
 
         logwavs = core.get_logwav_integration_grid(star.temp, n_step=n_step)
-        self._ensure_precomputed_wavelength_coverage(10.0**logwavs)
+        self._ensure_precomputed_wavelength_coverage(np.concatenate([
+            self.wavs,
+            10.0**logwavs,
+        ]))
 
         star_flux = core.calculate_spectral_flux_density(logwavs, star=star)
         star_flux_tot = core.integrate_log_spectrum(flux=star_flux, logwavs=logwavs)
@@ -647,7 +683,8 @@ class Particles:
         """
         if self.dists is None:
             raise ValueError("Distances (dists) must be set to compute all properties")
-            
+
+        self._ensure_temperature_precomputed_wavelength_coverage(star)
         self.calculate_scattering_properties()
         self.calculate_temperatures(star)
         self.calculate_beta_factors(star)

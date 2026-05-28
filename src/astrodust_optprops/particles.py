@@ -69,7 +69,41 @@ class Particles:
         # Optional: precomputation of coefficients (faster for if num(dists) high; needed for resoannce suppression)
         if self.precompute_Qs:
             # Create broad wavelength grid for precomputation
-            self.precomputed_wavs = np.logspace(-1, 4, 1500) # >= 1500 for test to succeed
+            self.precomputed_wavs = self._create_precomputed_wavelength_grid(self.wavs)
+            self._precompute_coefficients()
+
+    def _create_precomputed_wavelength_grid(self, wavs):
+        """Create the wavelength grid used for precomputed Q coefficients."""
+        wavs = np.asarray(wavs)
+        wav_min = min(1e-2, np.min(wavs))
+        wav_max = max(1e4, np.max(wavs))
+
+        if wav_min <= 0:
+            raise ValueError("Wavelengths must be positive")
+
+        points_per_decade = 300
+        n_decades = np.log10(wav_max) - np.log10(wav_min)
+        n_wavs = max(1500, int(np.ceil(points_per_decade * n_decades)) + 1)
+
+        return np.logspace(np.log10(wav_min), np.log10(wav_max), n_wavs)
+
+    def _ensure_precomputed_wavelength_coverage(self, wavs):
+        """Expand precomputed Q tables if a requested wavelength grid is outside them."""
+        if not self.precompute_Qs:
+            return
+
+        wavs = np.asarray(wavs)
+        if np.any(wavs <= 0):
+            raise ValueError("Wavelengths must be positive")
+
+        wav_min = np.min(wavs)
+        wav_max = np.max(wavs)
+        if wav_min < self.precomputed_wavs[0] or wav_max > self.precomputed_wavs[-1]:
+            grid_bounds = np.array([
+                min(wav_min, self.precomputed_wavs[0]),
+                max(wav_max, self.precomputed_wavs[-1]),
+            ])
+            self.precomputed_wavs = self._create_precomputed_wavelength_grid(grid_bounds)
             self._precompute_coefficients()
 
     def _compute_coefficients_for_diameters(self, diameters):
@@ -203,21 +237,32 @@ class Particles:
                 log_Q = (1 - w) * np.log10(Q1) + w * np.log10(Q2)
                 Q_values = 10.0**log_Q
 
+        precomputed_wavs = self.precomputed_wavs.copy()
+        log_precomputed_wavs = np.log10(precomputed_wavs)
+
         def interpolator(wavs):
+            wavs = np.asarray(wavs)
+            if np.any(wavs <= 0):
+                raise ValueError("Wavelengths must be positive")
+            if np.min(wavs) < precomputed_wavs[0] or np.max(wavs) > precomputed_wavs[-1]:
+                raise ValueError(
+                    "Requested wavelengths fall outside the precomputed Q grid. "
+                    "Call _ensure_precomputed_wavelength_coverage() before interpolation."
+                )
+
             if Q_type == 'g':
                 # Linear interpolation in wavelength dimension for g factor
                 return np.interp(
                     np.log10(wavs),
-                    np.log10(self.precomputed_wavs),
+                    log_precomputed_wavs,
                     Q_values
                 )
             else:
                 # Log interpolation in wavelength dimension for efficiencies
                 return 10.0**np.interp(
                     np.log10(wavs),
-                    np.log10(self.precomputed_wavs),
-                    np.log10(np.maximum(Q_values, 1e-30)),
-                    left=-30, right=-30  # Will become 1e-30 after 10**
+                    log_precomputed_wavs,
+                    np.log10(np.maximum(Q_values, 1e-30))
                 )
             
         return interpolator
@@ -243,6 +288,7 @@ class Particles:
         star_logwavs = core.get_logwav_integration_grid(star.temp)    
         star_flux = core.calculate_spectral_flux_density(star_logwavs, star=star)
         total_star_flux = core.integrate_log_spectrum(star_flux, star_logwavs)
+        self._ensure_precomputed_wavelength_coverage(10.0**star_logwavs)
         
         # Calculate blackbody temperatures at each distance as initial guesses
         temps_bb = np.array([core.calculate_blackbody_temp(star=star, dist=dist) 
@@ -313,6 +359,9 @@ class Particles:
             # Calculate blackbody flux at current temperature
             bb_flux = const.sigma_sb.value * curr_temp**4
             curr_logwavs = core.get_logwav_integration_grid(curr_temp)
+            if self.precompute_Qs:
+                self._ensure_precomputed_wavelength_coverage(10.0**curr_logwavs)
+                Q_interpolator = self.get_Q_interpolator(diam, 'abs')
             
             # Calculate absorption averaged over emission spectrum
             emitted_flux = core.calculate_spectral_flux_density(
@@ -349,6 +398,8 @@ class Particles:
 
     def calculate_scattering_properties(self):
         """Calculate Qabs, Qpr, Qsca, and g for the particles"""
+        self._ensure_precomputed_wavelength_coverage(self.wavs)
+
         self.Qabs = np.zeros((len(self.diams), len(self.wavs)))
         self.Qpr = np.zeros_like(self.Qabs)
         self.Qsca = np.zeros_like(self.Qabs)
@@ -425,6 +476,7 @@ class Particles:
         diams_to_use = np.asarray(np.atleast_1d(diams) if diams is not None else self.diams, dtype=float)
 
         logwavs = core.get_logwav_integration_grid(star.temp, n_step=n_step)
+        self._ensure_precomputed_wavelength_coverage(10.0**logwavs)
 
         star_flux = core.calculate_spectral_flux_density(logwavs, star=star)
         star_flux_tot = core.integrate_log_spectrum(flux=star_flux, logwavs=logwavs)

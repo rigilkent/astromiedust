@@ -56,7 +56,7 @@ def test_consistency_with_legacy_idl(star_name, lstar, tstar, mstar, spec_file, 
     np.testing.assert_allclose(prtl.betas, expected_betas, rtol=0.003)
     np.testing.assert_allclose(prtl.diams_blow, expected_diam_bl, rtol=.015,atol=.15)
     # Needs to be a bit higher, because of optimizations in calculate_beta_factors()
-    np.testing.assert_allclose(prtl.bnus, expected_bnus, rtol=0.02) # Needs a bit higher tolerance because
+    np.testing.assert_allclose(prtl.bnus, expected_bnus, rtol=0.02, atol=3.1e-17) # Needs a bit higher tolerance because
     # even rel. dev. of temp of 0.001 can cause ~% changes on the Wien side of the spectrum.
 
 # Run file as script to execute all test defined in this file

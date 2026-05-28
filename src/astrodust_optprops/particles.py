@@ -203,21 +203,23 @@ class Particles:
         }
         
         Q_type = Q_type.lower()
+        if Q_type not in Q_dict:
+            raise ValueError("Invalid Q_type. Must be one of 'abs', 'pr', 'sca', or 'g'.")
+
+        sorted_diams = np.sort(np.unique(self.diams))
         if diam in self.diams:
             # Direct lookup if diameter exists
             Q_values = Q_dict[Q_type][diam]
+        elif len(sorted_diams) < 2 or diam < sorted_diams[0] or diam > sorted_diams[-1]:
+            # Avoid extrapolating optical coefficients across grain size. Q can vary
+            # steeply outside the precomputed diameter range, especially for beta tests.
+            Q_values = core.calculate_scatt_efficiency_coeffs(
+                self.precomputed_wavs, diam, self.matrl
+            )[Q_type]
         else:
             # Find nearest diameters and interpolate Q values
-            idx = np.searchsorted(self.diams, diam)
-            if idx == 0:
-                # Extrapolate below smallest diameter
-                d1, d2 = self.diams[0], self.diams[1]
-            elif idx == len(self.diams):
-                # Extrapolate above largest diameter
-                d1, d2 = self.diams[-2], self.diams[-1]
-            else:
-                # Interpolate between two diameters
-                d1, d2 = self.diams[idx-1], self.diams[idx]
+            idx = np.searchsorted(sorted_diams, diam)
+            d1, d2 = sorted_diams[idx-1], sorted_diams[idx]
                 
             # Log-space interpolation weight
             log_d = np.log10(diam)

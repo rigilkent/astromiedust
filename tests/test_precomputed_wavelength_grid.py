@@ -54,3 +54,46 @@ def test_precomputed_grid_expands_for_hot_star_integration_wavelengths():
 
     assert particles.precomputed_wavs[0] <= integration_wav_min
     assert np.all(np.isfinite(particles.temps))
+
+
+def test_precomputed_diameter_extrapolation_falls_back_to_direct_calculation():
+    wavs = np.array([0.2, 2.0])
+    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
+
+    precomputed = opt.Particles(
+        diams=np.array([1.0, 1000.0]),
+        wavs=wavs,
+        matrl=matrl,
+        precompute_Qs=True,
+        show_progress=False,
+    )
+    direct = opt.Particles(
+        diams=np.array([0.01]),
+        wavs=wavs,
+        matrl=matrl,
+        precompute_Qs=False,
+        show_progress=False,
+    )
+
+    qabs = precomputed.get_Q_interpolator(0.01, "abs")(wavs)
+    direct.calculate_scattering_properties()
+
+    np.testing.assert_allclose(qabs, direct.Qabs[0], rtol=0.05)
+
+
+def test_precomputed_single_diameter_table_can_evaluate_other_diameters():
+    wavs = np.array([0.2, 2.0])
+    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
+
+    particles = opt.Particles(
+        diams=np.array([1.0]),
+        wavs=wavs,
+        matrl=matrl,
+        precompute_Qs=True,
+        show_progress=False,
+    )
+
+    qpr = particles.get_Q_interpolator(0.1, "pr")(wavs)
+
+    assert np.all(np.isfinite(qpr))
+    assert np.all(qpr >= 0)

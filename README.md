@@ -2,6 +2,11 @@
 A tool to compute the optical properties of circumstellar dust particles 
 as well as their resulting equilibrium temperatures and thermal emission.
 
+> [!NOTE]
+> This project was formerly named `astrodust_optprops`. The old import path
+> remains available as a compatibility layer, but new code should use
+> `import astromiedust`.
+
 
 ```optprops``` first finds the optical constants of a composite material made up of 
 silicate, refractory carbonaceous material, water ice, and vacuum

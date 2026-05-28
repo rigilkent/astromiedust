@@ -203,10 +203,10 @@ def calculate_scatt_efficiency_coeffs(wavs, diam, matrl):
     dielec[too_short] = matrl.eps[0]
 
     # Get all Qs for this particle
-    qabs = np.ones_like(wavs)
-    qpr = np.ones_like(wavs)
-    qsca = np.ones_like(wavs)
-    g = np.zeros_like(wavs)
+    qabs = np.full_like(wavs, np.nan)
+    qpr = np.full_like(wavs, np.nan)
+    qsca = np.full_like(wavs, np.nan)
+    g = np.full_like(wavs, np.nan)
     x = np.pi * diam * matrl.refmed / wavs
     m = np.sqrt(dielec)
     mx = np.abs(m) * x 
@@ -215,7 +215,7 @@ def calculate_scatt_efficiency_coeffs(wavs, diam, matrl):
     # Define regions for different scattering regimes
     mie_region = mx <= 1000.0
     rayleigh_gans_region = (mx > 1000.0) & (mx1 <= 0.001)
-    geometric_region = (mx > 1000.0) & (mx1 > 0.001) & (wavs < matrl.wavs[-1])
+    geometric_region = (mx > 1000.0) & (mx1 > 0.001)
 
     # Apply Mie theory, where wavelengths aren't small compared to particle size
     if np.any(mie_region):
@@ -232,6 +232,10 @@ def calculate_scatt_efficiency_coeffs(wavs, diam, matrl):
     if np.any(geometric_region):
         k = np.where(geometric_region)[0]
         qabs[k], qpr[k], qsca[k], g[k] = calculate_coeffs_geom_optics(np.real(m[k]))
+
+    handled_region = mie_region | rayleigh_gans_region | geometric_region
+    if np.any(~handled_region):
+        raise RuntimeError("Unhandled scattering regime encountered.")
 
     # Store all coefficients in a dictionary
     return {

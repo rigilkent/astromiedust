@@ -122,6 +122,7 @@ class Star:
         # Could use simpson here for high accuracy (1 promill different)
         # but using trapz for comparison with legacy IDL
         self.temp = tstar.value
+        self._warn_if_spectrum_edges_are_bright(wavs, flux_lam)
         if self.verbose:
             print(f'Star temperature derived from spectrum: T_eff = {self.temp:.1f} K')
 
@@ -194,9 +195,28 @@ class Star:
         # Calculate star temperature from its bolometric luminosity
         tstar = (np.trapezoid(flux_lam, wavs) / const.sigma_sb) ** 0.25
         self.temp = tstar.value
+        self._warn_if_spectrum_edges_are_bright(wavs, flux_lam)
         if self.verbose:
             print(f'Star temperature derived from spectrum arrays: T_eff = {self.temp:.1f} K')
 
+    def _warn_if_spectrum_edges_are_bright(self, wavs, flux_lam):
+        """Warn if a custom spectrum may be truncated while still bright."""
+        total_flux = np.trapezoid(flux_lam, wavs)
+        if total_flux <= 0 * total_flux.unit:
+            return
+
+        edge_flux_per_log_wav = np.maximum(
+            (flux_lam[0] * wavs[0]).to(total_flux.unit).value,
+            (flux_lam[-1] * wavs[-1]).to(total_flux.unit).value,
+        )
+        edge_fraction = edge_flux_per_log_wav / total_flux.value
+        if edge_fraction > 1e-3:
+            warn(
+                "Custom stellar spectrum may not cover the full luminosity: "
+                "the flux near at least one wavelength edge is still significant. "
+                "Flux outside the provided wavelength range is treated as zero.",
+                UserWarning,
+            )
 
     def plot_spectrum(self, ax=None, show_bb_fit=True):
         """Plot stellar spectrum and optionally its blackbody fit.
@@ -261,8 +281,13 @@ class Star:
         else:
             # Interpolate custom spectrum in log space for better accuracy
             logwavs = np.log10(wavs)
-            log_flux = np.interp(logwavs, self.log_wavs, self.log_flux_lam)
-            log_flux[np.isinf(log_flux)] = -50.0  # Handle extrapolation beyond data range
+            log_flux = np.interp(
+                logwavs,
+                self.log_wavs,
+                self.log_flux_lam,
+                left=-50.0,
+                right=-50.0,
+            )
             surface_flux = 10.0**log_flux
         
         if to_jy:

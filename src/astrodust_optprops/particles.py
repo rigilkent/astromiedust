@@ -703,67 +703,6 @@ class Particles:
         target_temps = 10**log_target_temps     # return to lin space
         return target_temps
 
-    def plot_Qabs(self, ax=None, diams=None, as_contour=False, n_contour_levels=100, add_contour_lines=[.1, 1]):
-        """Plot absorption efficiency (Qabs) as function of wavelength.
-
-        Can create either line plots for specific particle diameters or a 2D contour plot
-        showing Qabs for all particle sizes and wavelengths.
-
-        Args:
-            ax (matplotlib.axes.Axes, optional): Axes to plot on. If None, creates new figure.
-            diams (array-like, optional): Diameters to plot in line plot mode. If None and
-                as_contour=False, uses [3, 10, 30, 100, 300, 1000] µm. Ignored if as_contour=True.
-            as_contour (bool, optional): If True, creates contour plot. If False, creates line
-                plots. Defaults to False.
-            n_contour_levels (int, optional): Number of contour levels in 2D plot. Only used
-                if as_contour=True. Defaults to 100.
-            add_contour_lines (list, optional): Values at which to add contour lines in 2D
-                plot. Only used if as_contour=True. Set to None to disable. Defaults to [0.1, 1].
-
-        Returns:
-            matplotlib.axes.Axes: The axes containing the plot.
-        """
-        if ax is None:
-            _, ax = plt.subplots()
-            
-        if as_contour==True:
-            if diams is not None:
-                warnings.warn("plot_Qabs(): Input 'diams' is ignored when as_contour=True", UserWarning)
-            contour = ax.contourf(self.wavs, self.diams, self.Qabs,
-                                 levels=np.logspace(-2, np.log10(2), n_contour_levels),
-                                 norm=LogNorm(vmin=1e-2, vmax=2),
-                                 extend='min')
-            
-            cbar = plt.colorbar(contour, ax=ax, label=r'$Q_\mathrm{abs}$', pad=.01)
-            cbar.ax.set_ylabel(cbar.ax.get_ylabel(), fontsize=11)
-            cbar.set_ticks([.01, .1, 1])
-            cbar.ax.minorticks_on()
-            if add_contour_lines is not None:
-                contour_lines = ax.contour(self.wavs, self.diams, self.Qabs, levels=add_contour_lines, 
-                       colors='k', linewidths=.3, linestyles='dashed')
-                cbar.add_lines(contour_lines)
-            ax.set_ylabel(r'Particle diameter (µm)')
-            ax.set_yscale('log')
-            ax.set_xscale('log')
-        else:
-            ax.hlines(1, xmin=0, xmax=1e4, linestyle='--', linewidth=.8, color='black', alpha=.5)
-            if diams is None:
-                diams = np.logspace(.5,3,6)
-            diams = diams[np.logical_and(diams >= self.diams.min(), diams <= self.diams.max())]
-            # Create color progression using a colormap
-            colors = plt.cm.winter(np.linspace(0, 1, len(diams)))
-            for diam, color in zip(diams, colors):
-                idx = np.argmin(np.abs(self.diams - diam))
-                ax.loglog(self.wavs, self.Qabs[idx, :], label=f'{self.diams[idx]:.0f} µm', color=color, zorder=self.n_diams-idx)
-            ax.legend(title="Particle diameters:", loc='lower left', framealpha=1)
-            ax.set_ylabel(r'$Q_\mathrm{abs}$', fontsize=12)
-            ax.set_ylim(1e-2, 2)
-            ax.set_xlim(self.wavs.min(), self.wavs.max())
-
-        ax.set_xlabel('Wavelength (µm)')
-
-        return ax
-
     def plot_beta(self, ax=None, ylog=False, marker='None'):
         """Plot beta factors as a function of particle size.
 

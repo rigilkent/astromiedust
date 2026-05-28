@@ -31,6 +31,7 @@ class Material:
         """
         if emt.lower() not in ['maxwell-garnett', 'mg', 'bruggeman', 'br']:
             raise ValueError("Invalid EMT specified. Choose either 'Maxwell-Garnett'/'mg' or 'Bruggeman'/'br'.")
+        self._validate_inputs(qsil=qsil, qice=qice, mpor=mpor, refmed=refmed)
 
         self.qsil = qsil
         self.qice = qice
@@ -46,6 +47,22 @@ class Material:
         self.poro_tot = (1 - qice) * mpor
 
         self.calculate_composite_material_props()
+        if not np.isfinite(self.density) or self.density <= 0:
+            raise ValueError(
+                "Material density must be positive; pure-vacuum compositions are not supported."
+            )
+
+    @staticmethod
+    def _validate_inputs(qsil, qice, mpor, refmed):
+        """Validate scalar material fractions and refractive index."""
+        for name, value in {'qsil': qsil, 'qice': qice, 'mpor': mpor}.items():
+            if not np.isscalar(value) or not np.isfinite(value):
+                raise ValueError(f"{name} must be a finite scalar")
+            if value < 0.0 or value > 1.0:
+                raise ValueError(f"{name} must be between 0 and 1")
+
+        if not np.isscalar(refmed) or not np.isfinite(refmed) or refmed <= 0.0:
+            raise ValueError("refmed must be a positive finite scalar")
 
     def calculate_composite_material_props(self):
         """

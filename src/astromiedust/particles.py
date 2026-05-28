@@ -695,7 +695,7 @@ class Particles:
     def calculate_spectral_radiance_bb(wavs, temps, domain='freq'):
         """Simple wrapper for core.calculate_spectral_radiance_bb.
         
-        This static method provides direct access to the optprops.optics_core function 
+        This static method provides direct access to the astromiedust.optics_core function 
         which automatically handles input array shapes.
         
         Args:
@@ -730,7 +730,7 @@ class Particles:
             self.temps with interpolated temperature array of shape (rbin.num, self.n_diams).
 
         Note:
-            Original temperature data comes from self._optprops_prtl which must have
+            Original temperature data comes from a Particles instance which must have
               'dists' (distances in au) and 'temps' attributes
         """
         if self.temps is None:

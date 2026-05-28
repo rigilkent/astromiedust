@@ -7,8 +7,8 @@ from scipy.io import readsav
 tests_dir = Path(__file__).parent
 
 @pytest.mark.parametrize("star_name, lstar, tstar, mstar, spec_file, idl_outputs_file", [
-    ('BBStar', 0.70, 5000, 0.90, None, 'optprops_test_blackbody.sav'),
-    ('Vega',   47.2, None, 2.15, tests_dir / 'vega_spectrum.txt', 'optprops_test_vega.sav')
+    ('BBStar', 0.70, 5000, 0.90, None, 'astromiedust_test_blackbody.sav'),
+    ('Vega',   47.2, None, 2.15, tests_dir / 'vega_spectrum.txt', 'astromiedust_test_vega.sav')
 ])
 def test_consistency_with_legacy_idl(star_name, lstar, tstar, mstar, spec_file, idl_outputs_file):
     """

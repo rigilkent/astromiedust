@@ -8,7 +8,7 @@ as well as their resulting equilibrium temperatures and thermal emission.
 > `import astromiedust`.
 
 
-```optprops``` first finds the optical constants of a composite material made up of 
+`astromiedust` first finds the optical constants of a composite material made up of 
 silicate, refractory carbonaceous material, water ice, and vacuum
 using effective medium theory.
 It applies Mie theory, Rayleigh-Gans theory, or geometric optics
@@ -21,7 +21,7 @@ Optical constants of the composite may be computed using the Maxwell-Garnett rul
 treating dust as aggregates of core-mantle grains, following
 [Li & Greenberg (1997)](https://ui.adsabs.harvard.edu/abs/1997A%26A...323..566L/abstract),
 or using the Bruggeman rule.
-```optprops``` can also suppress Mie resonance ripples in the optical coefficients by averaging over nearby particle sizes.
+`astromiedust` can also suppress Mie resonance ripples in the optical coefficients by averaging over nearby particle sizes.
 
 ## Usage
 

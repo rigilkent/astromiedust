@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astrodust_optprops"
-version = "0.9.1"
+version = "0.10.0"
 description = "A tool to compute the optical properties of circumstellar dust particles as well as their resulting equilibrium temperatures and thermal emission."
 authors = [
     { name = "Max Sommer", email = "ms3078@cam.ac.uk" }

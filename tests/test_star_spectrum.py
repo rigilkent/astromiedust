@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import astropy.units as u
 
-import astrodust_optprops as opt
+import astromiedust as opt
 
 
 def test_custom_spectrum_flux_is_zero_outside_wavelength_range():

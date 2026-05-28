@@ -1,4 +1,4 @@
-# astrodust_optprops
+# astromiedust
 A tool to compute the optical properties of circumstellar dust particles 
 as well as their resulting equilibrium temperatures and thermal emission.
 
@@ -25,7 +25,7 @@ See the `examples` directory for more detailed usage examples.
 The package provides several key classes for modeling the optical properties:
 
 ```python
-import astrodust_optprops as opt
+import astromiedust as opt
 
 # Create a star object
 star = opt.Star(name='Fomalhaut', lum_suns=16.6, mass_suns=1.92, temp=8500)
@@ -49,7 +49,7 @@ print('Particle temperatures:\n', prtl.temps)
 ## Installation
 
 ```bash
-git clone https://github.com/rigilkent/astrodust_optprops.git
-cd astrodust_optprops
+git clone https://github.com/rigilkent/astromiedust.git
+cd astromiedust
 pip install .
 ```

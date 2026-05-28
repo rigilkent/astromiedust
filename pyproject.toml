@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "astrodust_optprops"
+name = "astromiedust"
 version = "0.10.0"
 description = "A tool to compute the optical properties of circumstellar dust particles as well as their resulting equilibrium temperatures and thermal emission."
 authors = [
@@ -24,4 +24,4 @@ dependencies = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-astrodust_optprops = ["material_data/*"]
+astromiedust = ["material_data/*"]

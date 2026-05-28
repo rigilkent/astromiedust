@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import astrodust_optprops as opt
+import astromiedust as opt
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,7 @@
 import numpy as np
 
-import astrodust_optprops as opt
-from astrodust_optprops import optics_core as core
+import astromiedust as opt
+from astromiedust import optics_core as core
 
 
 def test_long_wavelength_large_grains_use_geometric_optics():

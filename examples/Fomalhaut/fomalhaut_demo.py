@@ -1,6 +1,6 @@
 from pathlib import Path
 import numpy as np
-import astrodust_optprops as opt
+import astromiedust as opt
 
 script_dir = Path(__file__).parent
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-import astrodust_optprops as opt
+import astromiedust as opt
 
 
 def test_precomputed_grid_covers_requested_wavelengths_below_default():

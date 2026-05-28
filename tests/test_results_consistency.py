@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import astrodust_optprops as opt
+import astromiedust as opt
 from pathlib import Path
 from scipy.io import readsav
 

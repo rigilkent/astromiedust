@@ -51,6 +51,7 @@ class Particles:
         self.Qpr = None
         self.Qsca = None
         self.g = None
+        self.Qpr_star_avg = None
         self.betas = None
         self.bnus = None
         self.diams_blow = None
@@ -370,6 +371,102 @@ class Particles:
         
         return self.Qabs, self.Qpr, self.Qsca, self.g
 
+    @property
+    def effective_Qpr(self):
+        warnings.warn(
+            "'effective_Qpr' is deprecated. Use 'Qpr_star_avg' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(self, 'Qpr_star_avg', self.__dict__.get('spectrum_averaged_Qpr'))
+
+    @effective_Qpr.setter
+    def effective_Qpr(self, value):
+        warnings.warn(
+            "'effective_Qpr' is deprecated. Use 'Qpr_star_avg' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.Qpr_star_avg = value
+
+    @property
+    def spectrum_averaged_Qpr(self):
+        warnings.warn(
+            "'spectrum_averaged_Qpr' is deprecated. Use 'Qpr_star_avg' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(self, 'Qpr_star_avg', self.__dict__.get('spectrum_averaged_Qpr'))
+
+    @spectrum_averaged_Qpr.setter
+    def spectrum_averaged_Qpr(self, value):
+        warnings.warn(
+            "'spectrum_averaged_Qpr' is deprecated. Use 'Qpr_star_avg' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.Qpr_star_avg = value
+
+    def calculate_Qpr_star_avg(self, star, diams=None, n_step=400):
+        """Calculate Qpr averaged over the stellar spectrum.
+
+        Args:
+            star (Star): Star object containing stellar properties.
+            diams (float or array-like, optional): Specific diameter(s) to calculate
+                stellar-spectrum-averaged Qpr for. If None, uses self.diams and stores
+                the result in self.Qpr_star_avg.
+            n_step (int, optional): Number of integration steps. Defaults to 400.
+
+        Returns:
+            numpy.ndarray: Stellar-spectrum-averaged Qpr for each particle diameter.
+                If input diams was scalar, returns a scalar result.
+        """
+        input_was_scalar = np.isscalar(diams)
+        diams_to_use = np.asarray(np.atleast_1d(diams) if diams is not None else self.diams, dtype=float)
+
+        logwavs = core.get_logwav_integration_grid(star.temp, n_step=n_step)
+
+        star_flux = core.calculate_spectral_flux_density(logwavs, star=star)
+        star_flux_tot = core.integrate_log_spectrum(flux=star_flux, logwavs=logwavs)
+
+        qpr_star_flux_tot = np.zeros(len(diams_to_use), dtype=float)
+        for i, diam in enumerate(diams_to_use):
+            Q_interpolator = self.get_Q_interpolator(diam, 'pr') if self.precompute_Qs else None
+            qpr_star_flux = core.calculate_spectral_flux_density(
+                logwavs, star=star, Q_type='pr',
+                diam=diam, matrl=self.matrl,
+                Q_interpolator=Q_interpolator
+            )
+            qpr_star_flux_tot[i] = core.integrate_log_spectrum(flux=qpr_star_flux, logwavs=logwavs)
+
+        Qpr_star_avg = qpr_star_flux_tot / star_flux_tot
+
+        if diams is None:
+            self.Qpr_star_avg = Qpr_star_avg
+
+        if input_was_scalar:
+            return Qpr_star_avg[0]
+
+        return Qpr_star_avg
+
+    def calculate_spectrum_averaged_Qpr(self, star, diams=None, n_step=400):
+        """Deprecated alias for calculate_Qpr_star_avg()."""
+        warnings.warn(
+            "'calculate_spectrum_averaged_Qpr()' is deprecated. Use 'calculate_Qpr_star_avg()' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.calculate_Qpr_star_avg(star, diams=diams, n_step=n_step)
+
+    def calculate_effective_Qpr(self, star, diams=None, n_step=400):
+        """Deprecated alias for calculate_Qpr_star_avg()."""
+        warnings.warn(
+            "'calculate_effective_Qpr()' is deprecated. Use 'calculate_Qpr_star_avg()' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.calculate_Qpr_star_avg(star, diams=diams, n_step=n_step)
+
     def calculate_beta_factors(self, star, diams=None, n_step=400):
         """Calculate beta factors (ratio of radiation to gravitational force)
         
@@ -385,26 +482,9 @@ class Particles:
         """
         # Handle scalar input
         input_was_scalar = np.isscalar(diams)
-        diams_to_use = np.atleast_1d(diams) if diams is not None else self.diams
+        diams_to_use = np.asarray(np.atleast_1d(diams) if diams is not None else self.diams, dtype=float)
         
-        logwavs = core.get_logwav_integration_grid(star.temp, n_step=n_step)
-        
-        # Calculate total stellar flux
-        star_flux = core.calculate_spectral_flux_density(logwavs, star=star)
-        star_flux_tot = core.integrate_log_spectrum(flux=star_flux, logwavs=logwavs)
-
-        # Calculate Qpr averaged over stellar spectrum
-        qpr_star_flux_tot = np.zeros_like(diams_to_use)
-        for i, diam in enumerate(diams_to_use):
-            Q_interpolator = self.get_Q_interpolator(diam, 'pr') if self.precompute_Qs else None
-            qpr_star_flux = core.calculate_spectral_flux_density(
-                logwavs, star=star, Q_type='pr',
-                diam=diam, matrl=self.matrl, 
-                Q_interpolator=Q_interpolator
-            )
-            qpr_star_flux_tot[i] = core.integrate_log_spectrum(flux=qpr_star_flux, logwavs=logwavs)
-        
-        effective_qpr = qpr_star_flux_tot / star_flux_tot
+        Qpr_star_avg = self.calculate_Qpr_star_avg(star, diams=diams, n_step=n_step)
 
         # Calculate beta factors
         constant = 0.7652   # = (Lsun/(4*pi*c*G*Msun))*1e3 in (g/cm^3)µm, where
@@ -412,7 +492,7 @@ class Particles:
                             # c = 2.997924580e8 m/s, G = 6.67259e-11 m^3/kg/s^2
         betafacts = constant * (1.5 / (self.matrl.density * diams_to_use)) * \
                     (star.lum_suns / star.mass_suns)
-        betas = betafacts * effective_qpr
+        betas = betafacts * Qpr_star_avg
         
         # Only store results if using self.diams
         if diams is None:
@@ -662,6 +742,51 @@ class Particles:
         
 
         return ax
+
+    def plot_Qpr_star_avg(self, ax=None, marker='None'):
+        """Plot stellar-spectrum-averaged Qpr as a function of particle size.
+
+        Args:
+            ax (matplotlib.axes.Axes, optional): Axes to plot on. If None, creates new figure.
+            marker (str, optional): Matplotlib marker style. Defaults to 'None'.
+
+        Returns:
+            matplotlib.axes.Axes: The axes containing the plot.
+        """
+        if ax is None:
+            _, ax = plt.subplots()
+
+        if getattr(self, 'Qpr_star_avg', None) is None:
+            raise ValueError("""Qpr_star_avg has not been calculated.
+                                Run calculate_Qpr_star_avg() or calculate_beta_factors() first.""")
+
+        ax.plot(self.diams, self.Qpr_star_avg, marker=marker, linestyle='-', zorder=1)
+        ax.axhline(y=1, color='grey', linestyle='--', linewidth=0.8, zorder=0)
+
+        ax.set_xscale('log')
+        ax.set_ylim(bottom=0)
+        ax.set_xlabel('Particle diameter (um)')
+        ax.set_ylabel(r'$\langle Q_\mathrm{pr}\rangle_\star$')
+
+        return ax
+
+    def plot_spectrum_averaged_Qpr(self, ax=None, marker='None'):
+        """Deprecated alias for plot_Qpr_star_avg()."""
+        warnings.warn(
+            "'plot_spectrum_averaged_Qpr()' is deprecated. Use 'plot_Qpr_star_avg()' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.plot_Qpr_star_avg(ax=ax, marker=marker)
+
+    def plot_effective_Qpr(self, ax=None, marker='None'):
+        """Deprecated alias for plot_Qpr_star_avg()."""
+        warnings.warn(
+            "'plot_effective_Qpr()' is deprecated. Use 'plot_Qpr_star_avg()' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.plot_Qpr_star_avg(ax=ax, marker=marker)
 
     def plot_temp(self, ax=None, n_contour_levels=100, add_contour_lines=[110], add_blowout=True):
         """Plot equilibrium temperatures as a function of distance and particle size.

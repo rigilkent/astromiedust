@@ -65,7 +65,7 @@ class OpticalModel:
                         _save_attr(prtl_grp, attr, getattr(self.prtl, attr))
                 
                 # Save datasets
-                for attr in ['diams', 'wavs', 'dists', 'temps', 'Qabs', 'Qpr', 'Qsca', 'betas', 'bnus', 'diams_blow']:
+                for attr in ['diams', 'wavs', 'dists', 'temps', 'Qabs', 'Qpr', 'Qsca', 'Qpr_star_avg', 'betas', 'bnus', 'diams_blow']:
                     if hasattr(self.prtl, attr):
                         val = getattr(self.prtl, attr)
                         if val is not None:

@@ -91,15 +91,21 @@ class OpticalModel:
                         mat_grp.create_dataset('eps_real', data=mat.eps.real)
                         mat_grp.create_dataset('eps_imag', data=mat.eps.imag)
 
-    def save_beta_csv(self, file_name):
+    def save_beta_csv(self, file_name, include_Qpr_star_avg=False):
         """
         Save beta values to a CSV file.
 
-        The output has two columns:
+        The default output has two columns:
         diameter_um,beta
+
+        If include_Qpr_star_avg is True, the stellar-spectrum-averaged Qpr is
+        included as a third column:
+        diameter_um,beta,Qpr_star_avg
         
         Args:
             file_name (str): Path to the CSV file to create.
+            include_Qpr_star_avg (bool, optional): Include Qpr_star_avg as an
+                additional column. Defaults to False.
         """
         if self.prtl is None or getattr(self.prtl, 'betas', None) is None:
             raise ValueError("Particles with computed betas are required to save beta CSV.")
@@ -110,13 +116,53 @@ class OpticalModel:
         if diams.shape != betas.shape:
             raise ValueError("'diams' and 'betas' must have the same shape.")
 
-        data = np.column_stack((diams, betas))
+        columns = [diams, betas]
+        header = ["diameter_um", "beta"]
+
+        if include_Qpr_star_avg:
+            Qpr_star_avg = getattr(self.prtl, 'Qpr_star_avg', None)
+            if Qpr_star_avg is None:
+                raise ValueError(
+                    "Qpr_star_avg is required when include_Qpr_star_avg=True. "
+                    "Run calculate_Qpr_star_avg() or calculate_beta_factors() first."
+                )
+
+            Qpr_star_avg = np.asarray(Qpr_star_avg)
+            if diams.shape != Qpr_star_avg.shape:
+                raise ValueError("'diams' and 'Qpr_star_avg' must have the same shape.")
+
+            columns.append(Qpr_star_avg)
+            header.append("Qpr_star_avg")
+
+        data = np.column_stack(columns)
 
         with open(file_name, 'w', newline='') as file:
-            # Using comma+tab delimiter for human readability while maintaining 
+            # Using comma-separated fixed-width fields for human readability while maintaining
             # compatibility with the Julia loader (which splits by comma and strips whitespace).
-            file.write("# diameter_um,\tbeta\n")
-            np.savetxt(file, data, delimiter=",\t", fmt="%.7e")
+            fmt = "%.7e"
+            text_columns = [
+                [fmt % value for value in data[:, col_idx]]
+                for col_idx in range(data.shape[1])
+            ]
+            widths = [
+                max(len(header[col_idx]), *(len(value) for value in text_columns[col_idx]))
+                for col_idx in range(data.shape[1])
+            ]
+            widths[0] = max(widths[0], len("# ") + len(header[0]))
+
+            header_line = "# " + header[0]
+            for col_idx, label in enumerate(header[1:], start=1):
+                previous_width = widths[col_idx - 1]
+                if col_idx == 1:
+                    previous_width -= len("# ")
+                header_line += "," + " " * (previous_width - len(header[col_idx - 1]) + 1) + label
+            file.write(header_line + "\n")
+
+            for row in zip(*text_columns):
+                file.write(", ".join(
+                    value.rjust(widths[col_idx])
+                    for col_idx, value in enumerate(row)
+                ).rstrip() + "\n")
 
     def save_qabs_bnu_hdf5(self, file_name):
         """

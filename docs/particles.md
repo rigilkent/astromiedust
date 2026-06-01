@@ -14,7 +14,7 @@ prtl = opt.Particles(
     wavs=np.logspace(-1, 4, 300),  # um
     dists=np.logspace(0, 3, 40),   # au
     matrl=matrl,
-    suppress_mie_resonance=True,  # enable Mie resonance averaging
+    suppress_mie_resonance=True,
 )
 ```
 
@@ -40,7 +40,7 @@ prtl.calculate_blowout_diameters(star)
 
 `calculate_temperatures` and `calculate_all` require `dists` to be set.
 
-## Mie resonance averaging
+## Mie resonance suppression
 
 Set `suppress_mie_resonance=True` to average efficiency coefficients over nearby
 particle sizes. This can reduce narrow Mie ripples in the optical coefficients.

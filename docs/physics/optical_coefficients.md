@@ -23,5 +23,5 @@ rather than the lower-level `optics_core` functions.
 
 When `precompute_Qs=True`, coefficient tables are precomputed on a wavelength
 grid and interpolated where needed for integrations. This is the default. It is
-also required when Mie resonance averaging is enabled with
+also required when Mie resonance suppression is enabled with
 `suppress_mie_resonance=True`.

@@ -21,8 +21,8 @@ class Particles:
             dists (array-like, optional): Distances from star in au. Required for temperature calculations.
             show_progress (bool, optional): Whether to show progress bars for computations. Defaults to True.
             precompute_Qs (bool, optional): Whether to precompute scattering coefficients. Defaults to True.
-            suppress_mie_resonance (bool, optional): Whether to average Mie resonances over nearby sizes. Defaults to False.
-            size_averaging_window (float, optional): Determines the diameter averaging window for Mie resonances. Defaults to 2.
+            suppress_mie_resonance (bool, optional): Whether to suppress Mie resonances by averaging over nearby sizes. Defaults to False.
+            size_averaging_window (float, optional): Determines the diameter averaging window for Mie resonance suppression. Defaults to 2.
             
         Raises:
             ValueError: If any of the required parameters is None
@@ -67,7 +67,7 @@ class Particles:
         self.precomputed_g = {}
 
         if self.suppress_mie_resonance and not self.precompute_Qs:
-            warnings.warn("Mie resonance averaging requires precomputed Q coefficients. "
+            warnings.warn("Mie resonance suppression requires precomputed Q coefficients. "
                           "Setting precompute_Qs=True.", UserWarning)
             self.precompute_Qs = True
 
@@ -161,7 +161,7 @@ class Particles:
     def _precompute_coefficients(self):
         """Initialize lookup tables for scattering coefficients.
         
-        If Mie resonance averaging is enabled, computes coefficients on a fine diameter grid and averages 
+        If suppression is enabled, computes coefficients on a fine diameter grid and averages 
         within log-normal symmetric windows around requested diameters to reduce Mie resonances.
         Otherwise, computes coefficients directly at requested diameters.
         """

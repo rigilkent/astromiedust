@@ -191,3 +191,32 @@ def test_luminous_star_cold_grains_do_not_rebuild_temperature_q_grid():
 
     assert len(precompute_calls) == 1
     assert np.all(np.isfinite(particles.temps))
+
+
+def test_mie_resonance_suppression_floors_nonpositive_efficiencies():
+    matrl = opt.Material(qsil=1.0, qice=1.0, mpor=1.0)
+    particles = opt.Particles(
+        diams=np.array([0.1]),
+        wavs=np.array([9.0]),
+        matrl=matrl,
+        suppress_mie_resonance=True,
+        show_progress=False,
+    )
+    particles.precomputed_wavs = np.array([9.0, 10.0])
+
+    def fake_coefficients_for_diameters(diameters):
+        n_diams = len(diameters)
+        qabs = np.tile(np.array([-1e-8, 1e-6]), (n_diams, 1))
+        qpr = np.tile(np.array([0.0, 1e-6]), (n_diams, 1))
+        qsca = np.tile(np.array([1e-12, 1e-6]), (n_diams, 1))
+        g = np.zeros_like(qabs)
+        return qabs, qpr, qsca, g
+
+    particles._compute_coefficients_for_diameters = fake_coefficients_for_diameters
+
+    particles._precompute_coefficients()
+
+    assert np.all(np.isfinite(particles.precomputed_Qabs[0.1]))
+    assert np.all(np.isfinite(particles.precomputed_Qpr[0.1]))
+    assert np.all(particles.precomputed_Qabs[0.1] > 0)
+    assert np.all(particles.precomputed_Qpr[0.1] > 0)

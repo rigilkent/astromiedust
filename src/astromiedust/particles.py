@@ -127,7 +127,7 @@ class Particles:
                                  for dist in self.dists])
 
         star_logwavs = core.get_logwav_integration_grid(star.temp)
-        dust_temp_planning_margin = 0.7
+        dust_temp_planning_margin = 0.6
         coldest_planned_temp = max(np.min(temps_bb) * dust_temp_planning_margin, 1.0)
         coldest_logwavs = core.get_logwav_integration_grid(coldest_planned_temp)
         self._ensure_precomputed_wavelength_coverage(np.concatenate([
@@ -193,9 +193,9 @@ class Particles:
                 # Use log-averaging (geometric mean) for coefficients to accurately represent 
                 # multiplicative variations in particle sizes and prevent bias toward larger sizes, 
                 # as confirmed by tests matching single-size coefficients in non-resonant regime.
-                self.precomputed_Qabs[diam] = 10**np.mean(np.log10(fine_Qabs[mask]), axis=0)
-                self.precomputed_Qpr[diam] = 10**np.mean(np.log10(fine_Qpr[mask]), axis=0)
-                self.precomputed_Qsca[diam] = 10**np.mean(np.log10(fine_Qsca[mask]), axis=0)
+                self.precomputed_Qabs[diam] = self._log_average_efficiency(fine_Qabs[mask])
+                self.precomputed_Qpr[diam] = self._log_average_efficiency(fine_Qpr[mask])
+                self.precomputed_Qsca[diam] = self._log_average_efficiency(fine_Qsca[mask])
                 # Average g factor in linear space
                 self.precomputed_g[diam] = np.mean(fine_g[mask], axis=0)
 
@@ -207,6 +207,11 @@ class Particles:
                 self.precomputed_Qpr[diam] = Qpr[i]
                 self.precomputed_Qsca[diam] = Qsca[i]
                 self.precomputed_g[diam] = Qg[i]
+
+    @staticmethod
+    def _log_average_efficiency(values, floor=1e-30):
+        """Average efficiency coefficients in log space with a numerical floor."""
+        return 10**np.mean(np.log10(np.maximum(values, floor)), axis=0)
 
     def get_Q_interpolator(self, diam, Q_type='abs'):
         """Returns a function that interpolates Q coefficients at given wavelengths.

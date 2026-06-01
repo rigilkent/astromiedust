@@ -11,12 +11,12 @@ Most scripts follow the same pattern:
 
 ```python
 import numpy as np
-import astromiedust as opt
+import astromiedust as amd
 
-star = opt.Star(name="A star", temp=8000, lum_suns=10.0, mass_suns=1.8)
-matrl = opt.Material(qsil=0.4, qice=1.0, mpor=0.7)
+star = amd.Star(name="A star", temp=8000, lum_suns=10.0, mass_suns=1.8)
+matrl = amd.Material(qsil=0.4, qice=1.0, mpor=0.7)
 
-prtl = opt.Particles(
+prtl = amd.Particles(
     wavs=np.logspace(0, 4, 300),
     diams=np.logspace(0, 4, 41),
     dists=np.logspace(0, 3, 43),

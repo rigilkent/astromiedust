@@ -5,9 +5,9 @@ calculations. The built-in material data combine silicate, refractory
 carbonaceous material, water ice, and vacuum.
 
 ```python
-import astromiedust as opt
+import astromiedust as amd
 
-matrl = opt.Material(
+matrl = amd.Material(
     qsil=0.4,
     qice=1.0,
     mpor=0.7,

@@ -5,11 +5,11 @@ properties.
 
 ```python
 import numpy as np
-import astromiedust as opt
+import astromiedust as amd
 
-matrl = opt.Material()
+matrl = amd.Material()
 
-prtl = opt.Particles(
+prtl = amd.Particles(
     diams=np.logspace(-1, 3, 60),  # um
     wavs=np.logspace(-1, 4, 300),  # um
     dists=np.logspace(0, 3, 40),   # au
@@ -48,7 +48,7 @@ The `size_averaging_window` parameter controls the size range used for this
 averaging.
 
 ```python
-prtl = opt.Particles(
+prtl = amd.Particles(
     diams=diams,
     wavs=wavs,
     dists=dists,

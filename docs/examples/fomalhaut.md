@@ -9,24 +9,24 @@ wavelength, size, and distance grids, and the full `calculate_all` workflow.
 ```python
 from pathlib import Path
 import numpy as np
-import astromiedust as opt
+import astromiedust as amd
 
 example_dir = Path("examples/Fomalhaut")
 
-star = opt.Star(
+star = amd.Star(
     name="Fomalhaut",
     lum_suns=16.6,
     mass_suns=1.92,
     spectrum_file=example_dir / "fomalhaut_spectrum.txt",
 )
 
-matrl = opt.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="maxwell-garnett")
+matrl = amd.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="maxwell-garnett")
 
 wavs = np.logspace(0, 4, 300)
 diams = np.logspace(0, 4, 41)
 dists = np.logspace(0, 3, 43)
 
-prtl = opt.Particles(
+prtl = amd.Particles(
     diams=diams,
     wavs=wavs,
     dists=dists,
@@ -35,7 +35,7 @@ prtl = opt.Particles(
 )
 prtl.calculate_all(star)
 
-model = opt.OpticalModel(star=star, prtl=prtl)
+model = amd.OpticalModel(star=star, prtl=prtl)
 model.save(example_dir / "fomalhaut_results.pkl")
 ```
 

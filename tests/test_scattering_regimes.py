@@ -1,11 +1,11 @@
 import numpy as np
 
-import astromiedust as opt
+import astromiedust as amd
 from astromiedust import optics_core as core
 
 
 def test_long_wavelength_large_grains_use_geometric_optics():
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
     wavs = np.linspace(matrl.wavs[-1] * 1.01, 1.0e4, 8)
     diam = 1.0e7
 

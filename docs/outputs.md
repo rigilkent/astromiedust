@@ -3,16 +3,16 @@
 Use `OpticalModel` when you want to save a completed calculation.
 
 ```python
-import astromiedust as opt
+import astromiedust as amd
 
-model = opt.OpticalModel(star=star, prtl=prtl)
+model = amd.OpticalModel(star=star, prtl=prtl)
 model.save("model.pkl")
 ```
 
 ## Pickle round trip
 
 ```python
-loaded = opt.OpticalModel.load("model.pkl")
+loaded = amd.OpticalModel.load("model.pkl")
 
 star = loaded.star
 prtl = loaded.prtl

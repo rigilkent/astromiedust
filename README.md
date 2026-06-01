@@ -30,13 +30,13 @@ See the `examples` directory for more detailed usage examples.
 The package provides several key classes for modeling the optical properties:
 
 ```python
-import astromiedust as opt
+import astromiedust as amd
 
 # Create a star object
-star = opt.Star(name='Fomalhaut', lum_suns=16.6, mass_suns=1.92, temp=8500)
+star = amd.Star(name='Fomalhaut', lum_suns=16.6, mass_suns=1.92, temp=8500)
 
 # Create a material object
-matrl = opt.Material(...)
+matrl = amd.Material(...)
 
 # Define wavelengths, particles diameters, and their distances to the star
 wavs = [...]
@@ -44,7 +44,7 @@ diams = [...]
 dists = [...]
 
 # Create a Particles instance and calculate all properties
-prtl = opt.Particles(diams=diams, wavs=wavs, matrl=matrl, dists=dists)
+prtl = amd.Particles(diams=diams, wavs=wavs, matrl=matrl, dists=dists)
 prtl.calculate_all(star)
 
 print('Particle Qabs:\n', prtl.Qabs)

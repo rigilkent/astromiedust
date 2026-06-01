@@ -7,7 +7,7 @@ radiation-pressure beta factors, and blowout sizes.
 The preferred public import is:
 
 ```python
-import astromiedust as opt
+import astromiedust as amd
 ```
 
 The old `astrodust_optprops` package name is kept only as a compatibility layer
@@ -17,16 +17,16 @@ for older code.
 
 ```python
 import numpy as np
-import astromiedust as opt
+import astromiedust as amd
 
-star = opt.Star(name="Fomalhaut", lum_suns=16.6, mass_suns=1.92, temp=8500)
-matrl = opt.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="maxwell-garnett")
+star = amd.Star(name="Fomalhaut", lum_suns=16.6, mass_suns=1.92, temp=8500)
+matrl = amd.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="maxwell-garnett")
 
 wavs = np.logspace(0, 4, 300)   # wavelength grid, um
 diams = np.logspace(0, 4, 41)   # particle diameters, um
 dists = np.logspace(0, 3, 43)   # distance from star, au
 
-prtl = opt.Particles(diams=diams, wavs=wavs, dists=dists, matrl=matrl)
+prtl = amd.Particles(diams=diams, wavs=wavs, dists=dists, matrl=matrl)
 prtl.calculate_all(star)
 
 print(prtl.Qabs.shape)

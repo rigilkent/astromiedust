@@ -1,21 +1,21 @@
 import numpy as np
 
-import astromiedust as opt
+import astromiedust as amd
 
 
 def test_precomputed_grid_covers_requested_wavelengths_below_default():
     wavs = np.array([0.05, 0.2])
     diams = np.array([1.0])
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
 
-    precomputed = opt.Particles(
+    precomputed = amd.Particles(
         diams=diams,
         wavs=wavs,
         matrl=matrl,
         precompute_Qs=True,
         show_progress=False,
     )
-    direct = opt.Particles(
+    direct = amd.Particles(
         diams=diams,
         wavs=wavs,
         matrl=matrl,
@@ -35,10 +35,10 @@ def test_precomputed_grid_expands_for_hot_star_integration_wavelengths():
     wavs = np.array([0.2, 2.0])
     diams = np.array([1.0])
     dists = np.array([1.0])
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
-    star = opt.Star(name="HotStar", lum_suns=1.0, mass_suns=1.0, temp=50000.0)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    star = amd.Star(name="HotStar", lum_suns=1.0, mass_suns=1.0, temp=50000.0)
 
-    particles = opt.Particles(
+    particles = amd.Particles(
         diams=diams,
         wavs=wavs,
         matrl=matrl,
@@ -58,16 +58,16 @@ def test_precomputed_grid_expands_for_hot_star_integration_wavelengths():
 
 def test_precomputed_diameter_extrapolation_falls_back_to_direct_calculation():
     wavs = np.array([0.2, 2.0])
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
 
-    precomputed = opt.Particles(
+    precomputed = amd.Particles(
         diams=np.array([1.0, 1000.0]),
         wavs=wavs,
         matrl=matrl,
         precompute_Qs=True,
         show_progress=False,
     )
-    direct = opt.Particles(
+    direct = amd.Particles(
         diams=np.array([0.01]),
         wavs=wavs,
         matrl=matrl,
@@ -83,9 +83,9 @@ def test_precomputed_diameter_extrapolation_falls_back_to_direct_calculation():
 
 def test_precomputed_single_diameter_table_can_evaluate_other_diameters():
     wavs = np.array([0.2, 2.0])
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
 
-    particles = opt.Particles(
+    particles = amd.Particles(
         diams=np.array([1.0]),
         wavs=wavs,
         matrl=matrl,
@@ -103,10 +103,10 @@ def test_temperature_calculation_expands_precomputed_grid_once_for_cold_dust():
     wavs = np.array([1.0, 10.0])
     diams = np.array([1.0])
     dists = np.array([1000.0])
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
-    star = opt.Star(name="Solar", lum_suns=1.0, mass_suns=1.0, temp=5800.0)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    star = amd.Star(name="Solar", lum_suns=1.0, mass_suns=1.0, temp=5800.0)
 
-    particles = opt.Particles(
+    particles = amd.Particles(
         diams=diams,
         wavs=wavs,
         matrl=matrl,
@@ -134,10 +134,10 @@ def test_calculate_all_precomputes_q_grid_once():
     wavs = np.array([1.0, 10.0])
     diams = np.array([1.0])
     dists = np.array([1000.0])
-    matrl = opt.Material(qsil=0.5, qice=0.5, mpor=0.5)
-    star = opt.Star(name="Solar", lum_suns=1.0, mass_suns=1.0, temp=5800.0)
+    matrl = amd.Material(qsil=0.5, qice=0.5, mpor=0.5)
+    star = amd.Star(name="Solar", lum_suns=1.0, mass_suns=1.0, temp=5800.0)
 
-    particles = opt.Particles(
+    particles = amd.Particles(
         diams=diams,
         wavs=wavs,
         matrl=matrl,
@@ -166,10 +166,10 @@ def test_luminous_star_cold_grains_do_not_rebuild_temperature_q_grid():
     wavs = np.logspace(-1.5, 3.0, 60)
     diams = np.logspace(-1.0, 4.0, 8)
     dists = np.logspace(0.0, 3.0, 8)
-    matrl = opt.Material(qsil=1.0, qice=1.0, mpor=1.0)
-    star = opt.Star(name="VegaLike", lum_suns=46.5, mass_suns=2.15, temp=8902.0)
+    matrl = amd.Material(qsil=1.0, qice=1.0, mpor=1.0)
+    star = amd.Star(name="VegaLike", lum_suns=46.5, mass_suns=2.15, temp=8902.0)
 
-    particles = opt.Particles(
+    particles = amd.Particles(
         diams=diams,
         wavs=wavs,
         matrl=matrl,
@@ -194,8 +194,8 @@ def test_luminous_star_cold_grains_do_not_rebuild_temperature_q_grid():
 
 
 def test_mie_resonance_suppression_floors_nonpositive_efficiencies():
-    matrl = opt.Material(qsil=1.0, qice=1.0, mpor=1.0)
-    particles = opt.Particles(
+    matrl = amd.Material(qsil=1.0, qice=1.0, mpor=1.0)
+    particles = amd.Particles(
         diams=np.array([0.1]),
         wavs=np.array([9.0]),
         matrl=matrl,

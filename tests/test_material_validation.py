@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import astromiedust as opt
+import astromiedust as amd
 
 
 @pytest.mark.parametrize(
@@ -20,18 +20,18 @@ import astromiedust as opt
 )
 def test_material_rejects_invalid_fractions(kwargs):
     with pytest.raises(ValueError):
-        opt.Material(**kwargs)
+        amd.Material(**kwargs)
 
 
 @pytest.mark.parametrize("refmed", [0.0, -1.0, np.nan, np.inf, [1.0]])
 def test_material_rejects_invalid_refmed(refmed):
     with pytest.raises(ValueError):
-        opt.Material(refmed=refmed)
+        amd.Material(refmed=refmed)
 
 
 def test_material_rejects_pure_vacuum_composition():
     with pytest.raises(ValueError, match="density must be positive"):
-        opt.Material(qsil=0.0, qice=0.0, mpor=1.0)
+        amd.Material(qsil=0.0, qice=0.0, mpor=1.0)
 
 
 @pytest.mark.parametrize(
@@ -44,7 +44,7 @@ def test_material_rejects_pure_vacuum_composition():
     ],
 )
 def test_material_accepts_valid_edge_compositions(kwargs):
-    matrl = opt.Material(**kwargs)
+    matrl = amd.Material(**kwargs)
 
     assert np.isfinite(matrl.density)
     assert matrl.density > 0.0

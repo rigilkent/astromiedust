@@ -9,10 +9,10 @@ Two effective medium options are implemented:
 - Bruggeman: selected by `emt="bruggeman"` or `emt="br"`
 
 ```python
-import astromiedust as opt
+import astromiedust as amd
 
-mg = opt.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="mg")
-br = opt.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="br")
+mg = amd.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="mg")
+br = amd.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="br")
 ```
 
 For Maxwell-Garnett, the code follows the ordered mixing picture of

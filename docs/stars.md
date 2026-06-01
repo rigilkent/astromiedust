@@ -7,9 +7,9 @@ Luminosity and mass are supplied in solar units with `lum_suns` and
 ## Blackbody star
 
 ```python
-import astromiedust as opt
+import astromiedust as amd
 
-star = opt.Star(name="Fomalhaut", temp=8500, lum_suns=16.6, mass_suns=1.92)
+star = amd.Star(name="Fomalhaut", temp=8500, lum_suns=16.6, mass_suns=1.92)
 ```
 
 `temp` is in Kelvin.
@@ -17,7 +17,7 @@ star = opt.Star(name="Fomalhaut", temp=8500, lum_suns=16.6, mass_suns=1.92)
 ## Sun shortcut
 
 ```python
-star = opt.Star(name="Sun")
+star = amd.Star(name="Sun")
 ```
 
 If the name is `Sun` and no spectrum source is supplied, the class uses a
@@ -27,9 +27,9 @@ If the name is `Sun` and no spectrum source is supplied, the class uses a
 
 ```python
 from pathlib import Path
-import astromiedust as opt
+import astromiedust as amd
 
-star = opt.Star(
+star = amd.Star(
     name="Fomalhaut",
     lum_suns=16.6,
     mass_suns=1.92,
@@ -51,12 +51,12 @@ Arrays can be passed with `astropy` units:
 ```python
 import numpy as np
 import astropy.units as u
-import astromiedust as opt
+import astromiedust as amd
 
 wavs = np.array([0.5, 1.0, 2.0]) * u.um
 flux = np.array([1.0e7, 2.0e6, 3.0e5]) * u.W / u.m**2 / u.um
 
-star = opt.Star(
+star = amd.Star(
     name="custom",
     lum_suns=1.0,
     mass_suns=1.0,

@@ -2,11 +2,11 @@ import numpy as np
 import pytest
 import astropy.units as u
 
-import astromiedust as opt
+import astromiedust as amd
 
 
 def test_custom_spectrum_flux_is_zero_outside_wavelength_range():
-    star = opt.Star(
+    star = amd.Star(
         name="PeakedSpectrum",
         lum_suns=1.0,
         mass_suns=1.0,
@@ -24,7 +24,7 @@ def test_custom_spectrum_flux_is_zero_outside_wavelength_range():
 
 def test_custom_spectrum_warns_when_edges_are_bright():
     with pytest.warns(UserWarning, match="may not cover the full luminosity"):
-        opt.Star(
+        amd.Star(
             name="TruncatedSpectrum",
             lum_suns=1.0,
             mass_suns=1.0,

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import astromiedust as opt
+import astromiedust as amd
 from pathlib import Path
 from scipy.io import readsav
 
@@ -41,11 +41,11 @@ def test_consistency_with_legacy_idl(star_name, lstar, tstar, mstar, spec_file, 
     dists = np.array([1, 10, 100])
     wavs = np.array([.2, 2, 20, 200])
     diams = np.array([.1, 1, 10, 100, 1000])
-    matrl = opt.Material(qsil=.5, qice=.5, mpor=.5)
-    star = opt.Star(name=star_name, lum_suns=lstar, mass_suns=mstar, temp=tstar, spectrum_file=spec_file)
+    matrl = amd.Material(qsil=.5, qice=.5, mpor=.5)
+    star = amd.Star(name=star_name, lum_suns=lstar, mass_suns=mstar, temp=tstar, spectrum_file=spec_file)
 
     # Create Particles instance and calculate properties
-    prtl = opt.Particles(diams=diams, wavs=wavs, matrl=matrl, dists=dists, precompute_Qs=False)
+    prtl = amd.Particles(diams=diams, wavs=wavs, matrl=matrl, dists=dists, precompute_Qs=False)
     prtl.calculate_all(star)
 
     # Assert all results match IDL outputs within tolerances

@@ -23,16 +23,16 @@ Kelvin.
 
 ```python
 import numpy as np
-import astromiedust as opt
+import astromiedust as amd
 
-star = opt.Star(name="Sun", lum_suns=1.0, mass_suns=1.0)
-matrl = opt.Material()
+star = amd.Star(name="Sun", lum_suns=1.0, mass_suns=1.0)
+matrl = amd.Material()
 
 wavs = np.logspace(-1, 3, 120)
 diams = np.logspace(-1, 2, 20)
 dists = np.array([1.0, 10.0, 100.0])
 
-prtl = opt.Particles(
+prtl = amd.Particles(
     diams=diams,
     wavs=wavs,
     dists=dists,

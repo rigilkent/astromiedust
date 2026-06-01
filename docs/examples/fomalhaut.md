@@ -1,0 +1,43 @@
+# Fomalhaut Example
+
+The repository includes a complete Fomalhaut script at
+`examples/Fomalhaut/fomalhaut_demo.py`.
+
+It uses a custom stellar spectrum file, a porous composite material, logarithmic
+wavelength, size, and distance grids, and the full `calculate_all` workflow.
+
+```python
+from pathlib import Path
+import numpy as np
+import astromiedust as opt
+
+example_dir = Path("examples/Fomalhaut")
+
+star = opt.Star(
+    name="Fomalhaut",
+    lum_suns=16.6,
+    mass_suns=1.92,
+    spectrum_file=example_dir / "fomalhaut_spectrum.txt",
+)
+
+matrl = opt.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="maxwell-garnett")
+
+wavs = np.logspace(0, 4, 300)
+diams = np.logspace(0, 4, 41)
+dists = np.logspace(0, 3, 43)
+
+prtl = opt.Particles(
+    diams=diams,
+    wavs=wavs,
+    dists=dists,
+    matrl=matrl,
+    suppress_mie_resonance=True,
+)
+prtl.calculate_all(star)
+
+model = opt.OpticalModel(star=star, prtl=prtl)
+model.save(example_dir / "fomalhaut_results.pkl")
+```
+
+The same script also shows the plotting helpers for the stellar spectrum,
+optical coefficients, beta factors, temperatures, and asymmetry factor.

@@ -58,3 +58,17 @@ git clone https://github.com/rigilkent/astromiedust.git
 cd astromiedust
 pip install .
 ```
+
+## Documentation
+
+To build the documentation locally:
+
+```bash
+python -m pip install -e ".[docs]"
+mkdocs serve
+mkdocs build --strict
+```
+
+Publishing the docs requires GitHub Pages to be enabled for the repository with
+the source set to GitHub Actions. The docs workflow builds on pushes and pull
+requests, but deploys only when manually run from GitHub Actions.

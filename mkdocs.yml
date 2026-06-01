@@ -1,0 +1,52 @@
+site_name: astromiedust
+site_description: Optical properties, temperatures, and radiation-pressure factors for circumstellar dust.
+repo_url: https://github.com/rigilkent/astromiedust
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            docstring_style: google
+            docstring_options:
+              warn_missing_types: false
+            show_source: true
+            show_root_heading: true
+            show_symbol_type_heading: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - Core Workflow: workflow.md
+  - Stars: stars.md
+  - Materials: materials.md
+  - Particles: particles.md
+  - Outputs and I/O: outputs.md
+  - Physics Notes:
+      - Overview: physics/index.md
+      - Effective Medium Theory: physics/effective_medium.md
+      - Optical Coefficients: physics/optical_coefficients.md
+      - Temperatures and Beta: physics/temperatures_beta.md
+  - Examples:
+      - Fomalhaut: examples/fomalhaut.md
+  - API Reference: api.md

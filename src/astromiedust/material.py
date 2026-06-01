@@ -26,8 +26,8 @@ class Material:
             cryst (bool): Boolean indicating if the silicate is crystalline. 
                           Default is False (silicate is amorphous).
             refmed (float, optional): Refractive index of the surrounding medium relative to vacuum.
-                            Defaults to 1.0. but can be adjusted for considering
-                            scattering in mediums other than air or vacuum. 
+                            Defaults to 1.0, but can be adjusted for considering
+                            scattering in media other than vacuum. 
         """
         if emt.lower() not in ['maxwell-garnett', 'mg', 'bruggeman', 'br']:
             raise ValueError("Invalid EMT specified. Choose either 'Maxwell-Garnett'/'mg' or 'Bruggeman'/'br'.")

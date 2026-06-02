@@ -7,7 +7,6 @@ circumstellar dust.
 > remains available as a compatibility layer, but new code should use
 > `import astromiedust`.
 
-
 `astromiedust` first finds the optical constants of a composite material made up of 
 silicate, refractory carbonaceous material, water ice, and vacuum
 using effective medium theory.
@@ -15,17 +14,20 @@ It applies Mie theory, Rayleigh-Gans theory, or geometric optics
 in the respective wavelength regimes to determine the particles' 
 optical coefficients.
 These can then be used to compute the distance- and size-dependent equilibrium temperatures
-of particles around a given star, as well as their β-factors (the ratio of radiation pressure force to gravity), or their blowout sizes.
+of particles around a given star, as well as their β-factors 
+(the ratio of radiation pressure force to gravity), or their blowout sizes.
 
 Optical constants of the composite may be computed using the Maxwell-Garnett rule,
 treating dust as aggregates of core-mantle grains, following
 [Li & Greenberg (1997)](https://ui.adsabs.harvard.edu/abs/1997A%26A...323..566L/abstract),
 or using the Bruggeman rule.
-`astromiedust` can also suppress Mie resonance ripples in the optical coefficients by averaging over nearby particle sizes.
+`astromiedust` can also suppress Mie resonance ripples in the optical coefficients
+by averaging over nearby particle sizes.
 
 ## Usage
 
-See the `examples` directory for more detailed usage examples.
+See the [online documentation](https://rigilkent.github.io/astromiedust/) for
+usage examples and API reference.
 
 The package provides several key classes for modeling the optical properties:
 

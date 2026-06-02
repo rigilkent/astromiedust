@@ -1,15 +1,30 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "astromiedust"
 version = "0.11.0"
 description = "A tool to compute optical properties, temperatures, and thermal emission for circumstellar dust."
+readme = "README.md"
 authors = [
     { name = "Max Sommer", email = "ms3078@cam.ac.uk" }
 ]
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
+keywords = ["astronomy", "circumstellar dust", "mie scattering", "optical properties"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
 dependencies = [
     "numpy",
     "scipy",
@@ -27,8 +42,15 @@ docs = [
     "mkdocs-autorefs",
 ]
 
+[project.urls]
+Homepage = "https://github.com/rigilkent/astromiedust"
+Documentation = "https://rigilkent.github.io/astromiedust/"
+Repository = "https://github.com/rigilkent/astromiedust"
+Issues = "https://github.com/rigilkent/astromiedust/issues"
+
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["astromiedust*", "astrodust_optprops"]
 
 [tool.setuptools.package-data]
 astromiedust = ["material_data/*"]

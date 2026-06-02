@@ -1,10 +1,10 @@
 # Materials
 
 `Material` builds the composite dust dielectric function used by the scattering
-calculations. The built-in material data combine silicate, refractory
-carbonaceous material, water ice, and vacuum.
+calculations.
 
 ```python
+# Example
 import astromiedust as amd
 
 matrl = amd.Material(
@@ -16,16 +16,33 @@ matrl = amd.Material(
 )
 ```
 
-## Parameters
+## Composition Parameters
 
-`qsil` is the silicate volume fraction within the silicate plus organic
-core-mantle grain material.
+The material composition is parametrized by three volume fractions:
 
-`qice` is the water-ice volume fraction within the ice plus vacuum part of the
-matrix.
+`qsil` is the volume fraction of silicate in the combined volume of silicate
+and organic refractory material:
+`qsil = V_silicate / (V_silicate + V_organic)`.
 
-`mpor` is the matrix porosity: the total ice plus vacuum fraction of the final
-composite.
+`mpor` is the matrix porosity: the fraction of the total composite volume that
+is void space within the silicate-organic matrix. These voids can be empty or
+partially filled with water ice.
+
+`qice` is the fraction of that void volume filled with water ice:
+`qice = V_ice / (V_ice + V_vacuum)`. If `qice=0`, the void volume is vacuum;
+if `qice=1`, it is fully filled with ice.
+
+These three knobs imply the absolute volume fractions:
+
+- silicate: `qsil * (1 - mpor)`
+- organic material: `(1 - qsil) * (1 - mpor)`
+- water ice: `qice * mpor`
+- vacuum: `(1 - qice) * mpor`
+
+Each fraction parameter must be between 0 and 1. Pure-vacuum compositions
+(`mpor=1`, `qice=0`) will raise an error.
+
+## Other Parameters
 
 `cryst` selects crystalline silicate when `True`; the default is amorphous
 silicate.
@@ -44,7 +61,3 @@ After initialization, useful attributes include:
 - `matrl.eps`: complex effective dielectric function
 - `matrl.density`: bulk density in `g / cm^3`
 - `matrl.info`: short composition string
-
-The material fractions are validated to be finite scalars between 0 and 1.
-Pure-vacuum compositions are not supported because the resulting material
-density is not positive.

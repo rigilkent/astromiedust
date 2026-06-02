@@ -11,6 +11,7 @@ quantities for each particle diameter:
 The arrays use shape `(n_diams, n_wavs)`.
 
 ```python
+# Example
 prtl.calculate_scattering_properties()
 
 qabs_for_first_size = prtl.Qabs[0]

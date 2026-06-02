@@ -42,7 +42,6 @@ nav:
   - Particles: particles.md
   - Outputs and I/O: outputs.md
   - Physics Notes:
-      - Overview: physics/index.md
       - Effective Medium Theory: physics/effective_medium.md
       - Optical Coefficients: physics/optical_coefficients.md
       - Temperatures and Beta: physics/temperatures_beta.md

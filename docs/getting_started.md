@@ -25,9 +25,10 @@ Most scripts follow the same pattern:
 6. Save or plot the outputs.
 
 ```python
+# Example
 import astromiedust as amd
 
-star = amd.Star(...)
+star = amd.Star(name="Sun")
 matrl = amd.Material(qsil=0.5)
 prtl = amd.Particles(diams=diams, wavs=wavs, dists=dists, matrl=matrl)
 prtl.calculate_all(star)
@@ -36,8 +37,7 @@ prtl.calculate_all(star)
 For larger calculations, choose grids that cover the wavelengths, particle
 sizes, and distances relevant to the system being modeled.
 
-For a complete, file-based example, see the
-[Fomalhaut example](examples/fomalhaut.md).
+For a complete example, see the [Fomalhaut example](examples/fomalhaut.md).
 
 ## Main Objects
 
@@ -84,6 +84,7 @@ You can also run pieces of the workflow directly when you only need part of the
 calculation:
 
 ```python
+# Example
 prtl.calculate_scattering_properties()
 prtl.calculate_temperatures(star)
 prtl.calculate_beta_factors(star)
@@ -97,6 +98,7 @@ prtl.calculate_blowout_diameters(star)
 The main classes include Matplotlib helpers:
 
 ```python
+# Example
 star.plot_spectrum()
 prtl.plot_Q(Q_type="abs")
 prtl.plot_Q(Q_type="sca")

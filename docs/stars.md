@@ -7,6 +7,7 @@ Luminosity and mass are supplied in solar units with `lum_suns` and
 ## Blackbody star
 
 ```python
+# Example
 import astromiedust as amd
 
 star = amd.Star(name="Fomalhaut", temp=8500, lum_suns=16.6, mass_suns=1.92)
@@ -26,6 +27,7 @@ If the name is `Sun` and no spectrum source is supplied, the class uses a
 ## Spectrum file
 
 ```python
+# Example
 from pathlib import Path
 import astromiedust as amd
 
@@ -49,6 +51,7 @@ The effective temperature is derived from the integrated spectrum.
 Arrays can be passed with `astropy` units:
 
 ```python
+# Example
 import numpy as np
 import astropy.units as u
 import astromiedust as amd

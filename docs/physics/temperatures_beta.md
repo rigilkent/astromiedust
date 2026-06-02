@@ -4,6 +4,7 @@ Equilibrium temperatures require a stellar spectrum, particle absorption
 efficiencies, and distances from the star.
 
 ```python
+# Example
 prtl.calculate_temperatures(star)
 print(prtl.temps)  # K, shape (n_dists, n_diams)
 ```
@@ -17,6 +18,7 @@ computes a stellar-spectrum-averaged radiation-pressure efficiency and then uses
 the star mass and luminosity to estimate beta as a function of particle size.
 
 ```python
+# Example
 prtl.calculate_beta_factors(star)
 
 print(prtl.Qpr_star_avg)
@@ -27,6 +29,7 @@ print(prtl.betas)
 exceeds a selected blowout threshold. The default threshold is `beta_blow=0.5`.
 
 ```python
+# Example
 lower_um, upper_um = prtl.calculate_blowout_diameters(star)
 ```
 

@@ -7,6 +7,7 @@ It uses a custom stellar spectrum file, a porous composite material, logarithmic
 wavelength, size, and distance grids, and the full `calculate_all` workflow.
 
 ```python
+# Example
 from pathlib import Path
 import numpy as np
 import astromiedust as amd

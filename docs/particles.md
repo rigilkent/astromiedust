@@ -4,7 +4,13 @@
 properties.
 
 ```python
+# Example
+import numpy as np
 import astromiedust as amd
+
+wavs = np.logspace(-1, 4, 300)
+diams = np.logspace(-1, 3, 60)
+dists = np.logspace(0, 3, 40)
 
 prtl = amd.Particles(
     diams=diams,  # particle diameters, um
@@ -15,7 +21,7 @@ prtl = amd.Particles(
 ```
 
 `diams` may also be an `astropy` quantity convertible to `um`. Other grids are
-normally plain arrays in the units shown above.
+plain arrays in the units shown above.
 
 For the standard calculation order and result arrays, see
 [Getting Started](getting_started.md).
@@ -23,11 +29,16 @@ For the standard calculation order and result arrays, see
 ## Mie resonance suppression
 
 Set `suppress_mie_resonance=True` to average efficiency coefficients over nearby
-particle sizes. This can reduce narrow Mie ripples in the optical coefficients.
+particle sizes. This smooths out Mie ripples in the optical coefficients.
 The `size_averaging_window` parameter controls the size range used for this
-averaging.
+averaging (default: `2`, i.e. average over diameters from `diam / 2` to
+`diam * 2`).
+
+This option increases computation time because coefficients are evaluated on a
+finer diameter grid before averaging.
 
 ```python
+# Example
 prtl = amd.Particles(
     diams=diams,
     wavs=wavs,

@@ -3,6 +3,7 @@
 Use `OpticalModel` when you want to save a completed calculation.
 
 ```python
+# Example
 import astromiedust as amd
 
 model = amd.OpticalModel(star=star, prtl=prtl)
@@ -12,6 +13,7 @@ model.save("model.pkl")
 ## Pickle round trip
 
 ```python
+# Example
 loaded = amd.OpticalModel.load("model.pkl")
 
 star = loaded.star
@@ -25,6 +27,7 @@ most direct way to continue a calculation later in Python.
 ## HDF5 export
 
 ```python
+# Example
 model.save_hdf5("model.h5")
 ```
 
@@ -34,6 +37,7 @@ HDF5 for interoperability.
 ## Beta CSV
 
 ```python
+# Example
 model.save_beta_csv("beta.csv")
 model.save_beta_csv("beta_with_qpr.csv", include_Qpr_star_avg=True)
 ```
@@ -49,6 +53,7 @@ stellar-spectrum-averaged radiation-pressure efficiency.
 ## Qabs times Bnu HDF5
 
 ```python
+# Example
 model.save_qabs_bnu_hdf5("qabs_bnu.h5")
 ```
 

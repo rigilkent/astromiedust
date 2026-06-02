@@ -9,6 +9,7 @@ Two effective medium options are implemented:
 - Bruggeman: selected by `emt="bruggeman"` or `emt="br"`
 
 ```python
+# Example
 import astromiedust as amd
 
 mg = amd.Material(qsil=0.4, qice=1.0, mpor=0.7, emt="mg")

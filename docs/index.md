@@ -15,9 +15,8 @@ for older code.
 
 ## Start here
 
-- [Getting Started](getting_started.md) covers installation and a minimal run.
-- [Getting Started](getting_started.md) explains how the main objects fit
-  together and what `calculate_all(star)` computes.
+- [Getting Started](getting_started.md) covers installation and the standard
+  workflow.
 - [Stars](stars.md), [Materials](materials.md), and [Particles](particles.md)
   describe the main calculation inputs in more detail.
 - [Outputs and I/O](outputs.md) shows how to save and export a completed run.

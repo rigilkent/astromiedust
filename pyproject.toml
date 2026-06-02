@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astromiedust"
-version = "0.10.0"
+version = "0.11.0"
 description = "A tool to compute optical properties, temperatures, and thermal emission for circumstellar dust."
 authors = [
     { name = "Max Sommer", email = "ms3078@cam.ac.uk" }

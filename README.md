@@ -1,6 +1,6 @@
 # astromiedust
-A tool to compute the optical properties of circumstellar dust particles 
-as well as their resulting equilibrium temperatures and thermal emission.
+A tool to compute optical properties, temperatures, and thermal emission for
+circumstellar dust.
 
 > [!NOTE]
 > This project was formerly named `astrodust_optprops`. The old import path

@@ -37,7 +37,6 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
-  - Core Workflow: workflow.md
   - Stars: stars.md
   - Materials: materials.md
   - Particles: particles.md

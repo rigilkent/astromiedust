@@ -21,7 +21,7 @@ geometric optics according to the wavelength, particle size, and material
 properties. For user scripts, the main entry point is the `Particles` class
 rather than the lower-level `optics_core` functions.
 
-When `precompute_Qs=True`, coefficient tables are precomputed on a wavelength
-grid and interpolated where needed for integrations. This is the default. It is
-also required when Mie resonance suppression is enabled with
-`suppress_mie_resonance=True`.
+For the standard workflow, coefficient tables are precomputed on a wavelength
+grid and interpolated where needed for integrations. Mie resonance suppression
+uses the same precomputed tables while averaging coefficients over nearby
+particle sizes.

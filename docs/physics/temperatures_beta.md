@@ -30,6 +30,10 @@ exceeds a selected blowout threshold. The default threshold is `beta_blow=0.5`.
 lower_um, upper_um = prtl.calculate_blowout_diameters(star)
 ```
 
+The return value is always an interval. If beta exceeds the threshold down to
+the smallest sizes considered by the search, the lower value is `0`. If no
+particles exceed the threshold, the result is `(None, None)`.
+
 For a complete standard run, `calculate_all(star)` performs these calculations
 and also fills `bnus`, the blackbody spectral radiance on the requested
 wavelength, distance, and diameter grids.

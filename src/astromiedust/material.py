@@ -4,6 +4,8 @@ from scipy.optimize import fsolve
 
 matrl_data_path = resources.files('astromiedust') / 'material_data'
 
+__all__ = ["Material"]
+
 class Material:
     """
     Represents a composite material with dielectric properties.
@@ -255,58 +257,3 @@ class Material:
         real_part = np.interp(wavs_to, wavs_from, eps.real)
         imag_part = np.interp(wavs_to, wavs_from, eps.imag)
         return real_part + 1j * imag_part
-
-class OpticalModel:
-    """
-    Class to hold input class objects (Star and Material) as well as computed resulting optical properties.
-    Used for saving of results.
-    
-    Attributes:
-        star (Star): The star object containing star properties.
-        matrl (Material): The material object containing material properties.
-        temps (numpy.ndarray): Temperatures for each dust particle diameter and distance.
-        Qabs (numpy.ndarray): Absorption efficiency for each dust particle diameter and wavelength.
-        Qpr (numpy.ndarray): Radiation pressure efficiency for each dust particle diameter and wavelength.
-        Qsca (numpy.ndarray): Scattering efficiency for each dust particle diameter and wavelength.
-        beta (numpy.ndarray): Radiation pressure efficiency for each dust particle diameter.
-        diam_blow (numpy.ndarray): Blowout diameters for each dust particle diameter.
-        bnus (numpy.ndarray): Spectral radiance for each dust particle diameter, distance, and wavelength. 
-    """
-    def __init__(self, star, matrl, diams=None, dists=None, wavs=None, temps=None,
-            Qabs=None, Qpr=None, Qsca=None, betas=None, diam_blow=None, bnus=None):
-        self.star = star
-        self.matrl = matrl
-        self.diams = diams
-        self.dists = dists
-        self.wavs = wavs
-        self.temps = temps
-        self.Qabs = Qabs
-        self.Qpr = Qpr
-        self.Qsca = Qsca
-        self.betas = betas
-        self.diam_blow = diam_blow
-        self.bnus = bnus
-    
-    def save(self, file_name):
-        """
-        Save the OpticalModel object to a file using pickle.
-        
-        Args:
-            file_name (str): The name of the file to save the object to.
-        """
-        with open(file_name, 'wb') as file:
-            pickle.dump(self, file)
-        
-    @staticmethod
-    def load(file_name):
-        """
-        Load an OpticalModel object from a file using pickle.
-        
-        Args:
-            file_name (str): The name of the file to load the object from.
-        
-        Returns:
-            OpticalModel: The loaded OpticalModel object.
-        """
-        with open(file_name, 'rb') as file:
-            return pickle.load(file)

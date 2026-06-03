@@ -51,7 +51,7 @@ carbonaceous material, water ice, and vacuum.
 `Particles` stores the requested particle size, wavelength, and distance grids
 and performs the optical and thermal calculations.
 
-`OpticalModel` is a lightweight container for saving and loading a completed
+`SystemResult` is a lightweight container for saving and loading a completed
 star plus particle calculation.
 
 ## What `calculate_all` Fills

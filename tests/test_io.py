@@ -1,9 +1,10 @@
 from types import SimpleNamespace
 
 import numpy as np
+import pickle
 import pytest
 
-from astromiedust import OpticalModel
+from astromiedust import OpticalModel, SystemResult
 
 
 def test_save_beta_csv_defaults_to_existing_two_columns(tmp_path):
@@ -14,7 +15,7 @@ def test_save_beta_csv_defaults_to_existing_two_columns(tmp_path):
     )
     file_name = tmp_path / "beta.csv"
 
-    OpticalModel(prtl=prtl).save_beta_csv(file_name)
+    SystemResult(prtl=prtl).save_beta_csv(file_name)
 
     lines = file_name.read_text().splitlines()
     assert lines[0] == "# diameter_um, beta"
@@ -33,7 +34,7 @@ def test_save_beta_csv_can_include_qpr_star_avg(tmp_path):
     )
     file_name = tmp_path / "beta.csv"
 
-    OpticalModel(prtl=prtl).save_beta_csv(file_name, include_Qpr_star_avg=True)
+    SystemResult(prtl=prtl).save_beta_csv(file_name, include_Qpr_star_avg=True)
 
     lines = file_name.read_text().splitlines()
     assert lines[0] == "# diameter_um, beta,          Qpr_star_avg"
@@ -52,7 +53,32 @@ def test_save_beta_csv_requires_qpr_star_avg_when_requested(tmp_path):
     )
 
     with pytest.raises(ValueError, match="Qpr_star_avg is required"):
-        OpticalModel(prtl=prtl).save_beta_csv(
+        SystemResult(prtl=prtl).save_beta_csv(
             tmp_path / "beta.csv",
             include_Qpr_star_avg=True,
         )
+
+
+def test_optical_model_alias_remains_available():
+    assert OpticalModel is SystemResult
+
+
+def test_optical_model_pickle_name_remains_loadable():
+    old_pickle = (
+        b"castromiedust.io\n"
+        b"OpticalModel\n"
+        b"p0\n"
+        b")\x81p1\n"
+        b"(dp2\n"
+        b"Vstar\n"
+        b"p3\n"
+        b"NsVprtl\n"
+        b"p4\n"
+        b"Nsb."
+    )
+
+    result = pickle.loads(old_pickle)
+
+    assert isinstance(result, SystemResult)
+    assert result.star is None
+    assert result.prtl is None

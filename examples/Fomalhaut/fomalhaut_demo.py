@@ -23,17 +23,17 @@ prtl = amd.Particles(diams=diams, wavs=wavs, dists=dists,
 prtl.calculate_all(star)
 
 # --------------------------- Save complete state --------------------------------
-model = amd.OpticalModel(star=star, prtl=prtl)
-model.save(script_dir / 'fomalhaut_results.pkl')
-# model.save_beta_csv(script_dir / 'fomalhaut_beta.csv')
-# model.save_qabs_bnu_hdf5(script_dir / 'fomalhaut_therm_emission.h5')
+result = amd.SystemResult(star=star, prtl=prtl)
+result.save(script_dir / 'fomalhaut_results.pkl')
+# result.save_beta_csv(script_dir / 'fomalhaut_beta.csv')
+# result.save_qabs_bnu_hdf5(script_dir / 'fomalhaut_therm_emission.h5')
 
 
 
 # ----------------------------- Later, load and use: -------------------------------
-# loaded_model = amd.OpticalModel.load(script_dir / 'fomalhaut_results.pkl')
-# prtl = loaded_model.prtl
-# star = loaded_model.star
+# loaded_result = amd.SystemResult.load(script_dir / 'fomalhaut_results.pkl')
+# prtl = loaded_result.prtl
+# star = loaded_result.star
 
 # Make a few plots:
 savefig_kwargs = dict(dpi=300, bbox_inches='tight', pad_inches=0.01)

@@ -34,7 +34,7 @@ The preferred public API is imported from `astromiedust`.
         - plot_Qpr_star_avg
         - plot_temp
 
-::: astromiedust.OpticalModel
+::: astromiedust.SystemResult
     options:
       members:
         - __init__

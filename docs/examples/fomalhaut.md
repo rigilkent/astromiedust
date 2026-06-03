@@ -36,8 +36,8 @@ prtl = amd.Particles(
 )
 prtl.calculate_all(star)
 
-model = amd.OpticalModel(star=star, prtl=prtl)
-model.save(example_dir / "fomalhaut_results.pkl")
+result = amd.SystemResult(star=star, prtl=prtl)
+result.save(example_dir / "fomalhaut_results.pkl")
 ```
 
 The same script also shows the plotting helpers for the stellar spectrum,

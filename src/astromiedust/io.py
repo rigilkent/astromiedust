@@ -2,8 +2,10 @@ import pickle
 import h5py
 import numpy as np
 
-class OpticalModel:
-    """Class for saving and loading complete computation results.
+__all__ = ["SystemResult", "OpticalModel"]
+
+class SystemResult:
+    """Container for saving, loading, and exporting computation results.
     
     This class serves as a container to serialize/deserialize computation results.
     After loading, it provides direct access to both the star configuration
@@ -22,13 +24,13 @@ class OpticalModel:
         self.prtl = prtl
     
     def save(self, file_name):
-        """Save the complete model state to a file using pickle."""
+        """Save the complete result to a file using pickle."""
         with open(file_name, 'wb') as file:
             pickle.dump(self, file)
         
     def save_hdf5(self, file_name):
         """
-        Save the complete model state to an HDF5 file for interoperability.
+        Save the complete result to an HDF5 file for interoperability.
         
         Args:
             file_name (str): Path to the HDF5 file to create.
@@ -197,12 +199,16 @@ class OpticalModel:
 
     @staticmethod
     def load(file_name):
-        """Load a complete model state from a file.
+        """Load a complete result from a file.
         
         After loading, you can access:
-            model.star - The star configuration
-            model.prtl - The Particles object with all properties
-            model.prtl.matrl - The material properties
+            result.star - The star configuration
+            result.prtl - The Particles object with all properties
+            result.prtl.matrl - The material properties
         """
         with open(file_name, 'rb') as file:
             return pickle.load(file)
+
+
+# Backwards-compatible name retained for existing scripts and pickle files.
+OpticalModel = SystemResult

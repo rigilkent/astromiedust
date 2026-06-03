@@ -60,7 +60,24 @@ def test_save_beta_csv_requires_qpr_star_avg_when_requested(tmp_path):
 
 
 def test_optical_model_alias_remains_available():
-    assert OpticalModel is SystemResult
+    assert issubclass(OpticalModel, SystemResult)
+
+
+def test_optical_model_constructor_warns_deprecated_name():
+    with pytest.warns(DeprecationWarning, match="remains available for compatibility"):
+        result = OpticalModel(prtl=SimpleNamespace())
+
+    assert isinstance(result, SystemResult)
+
+
+def test_optical_model_load_warns_deprecated_name(tmp_path):
+    file_name = tmp_path / "result.pkl"
+    SystemResult(prtl=SimpleNamespace()).save(file_name)
+
+    with pytest.warns(DeprecationWarning, match="remains available for compatibility"):
+        result = OpticalModel.load(file_name)
+
+    assert isinstance(result, SystemResult)
 
 
 def test_optical_model_pickle_name_remains_loadable():

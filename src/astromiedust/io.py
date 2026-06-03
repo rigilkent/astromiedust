@@ -1,8 +1,14 @@
 import pickle
+import warnings
 import h5py
 import numpy as np
 
 __all__ = ["SystemResult", "OpticalModel"]
+
+_OPTICAL_MODEL_DEPRECATION_MESSAGE = (
+    "OpticalModel is deprecated and remains available for compatibility; "
+    "use SystemResult for new code."
+)
 
 class SystemResult:
     """Container for saving, loading, and exporting computation results.
@@ -210,5 +216,22 @@ class SystemResult:
             return pickle.load(file)
 
 
-# Backwards-compatible name retained for existing scripts and pickle files.
-OpticalModel = SystemResult
+class OpticalModel(SystemResult):
+    """Deprecated compatibility name for :class:`SystemResult`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            _OPTICAL_MODEL_DEPRECATION_MESSAGE,
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def load(file_name):
+        warnings.warn(
+            _OPTICAL_MODEL_DEPRECATION_MESSAGE,
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return SystemResult.load(file_name)
